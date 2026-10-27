@@ -5,6 +5,7 @@
   var store = C.storageAdapter(local);
   var config = store.read('settings', {addons:[C.DEFAULT_ADDON],server:'',torrents:false});
   if(!config||typeof config!=='object'||Array.isArray(config))config={addons:[C.DEFAULT_ADDON],server:'',torrents:false};
+  config.subtitleLanguage=config.subtitleLanguage==='off'?'off':'hr';
   config.server=typeof config.server==='string'?config.server:'';config.torrents=config.torrents===true;
   if (!Array.isArray(config.addons)) config.addons = [C.DEFAULT_ADDON];
   config.addons = config.addons.slice(0,12).filter(function(u){try{C.manifestURL(u);return true;}catch(_){return false;}});
@@ -14,7 +15,7 @@
   var sample = C.cleanMeta({id:'luma:sample',type:'movie',name:'Provjera slike i zvuka',description:'Kratki test boja, pokreta i tihog zvučnog signala. Provjeri radi li player na tvom televizoru. Ovaj video dolazi uz aplikaciju i ne treba Stremio server.',runtime:'20 sekundi',genres:['Test playera'],background:new URL('assets/calibration.png',location.href).href,_sample:true},'builtin');
   var sampleStream = {name:'LUMA · probni video',description:'MP4 · H.264 Baseline / AAC · 640 × 360 · 20 sekundi',url:new URL('assets/luma-test.mp4',location.href).href};
   var requestQueue = [], inFlight = 0, toastTimer, heroTimer;
-  var activeAddonSignature='',lastCloudPush=0;
+  var activeAddonSignature='',activeViewSignature='',lastCloudPush=0;
   var account=window.LumaStremio.createClient({store:store,onChange:accountChanged});
   function addonURLs(){return account.status().connected?account.addons().urls:config.addons;}
   function restoreGuest(){bookmarks=C.uniqueMetas(store.read('bookmarks',[])).slice(0,150);history=store.read('history',{});if(!history||typeof history!=='object'||Array.isArray(history))history={};}
@@ -24,8 +25,9 @@
     if(kind==='disconnected')restoreGuest();else accountViews();
     var status=document.getElementById('account-sync-status');if(status)status.textContent=syncLabel();
     if(kind==='syncing'||kind==='local'||kind==='saved')return;
+    var accountState=account.status(),viewSignature=JSON.stringify([bookmarks,history,accountState.connected,accountState.error,accountState.pending]),viewChanged=viewSignature!==activeViewSignature;activeViewSignature=viewSignature;
     var signature=addonURLs().join('\n');if(signature!==activeAddonSignature){activeAddonSignature=signature;loadCatalogs();}
-    else if(!state.layers.length&&!state.player)render();
+    else if(viewChanged&&!state.layers.length&&!state.player)render();
     if(kind==='error')toast('Stremio sinkronizacija nije dovršena. Promjene čekaju u LUMI.');
   }
   function syncAccount(){return account.sync().catch(function(){});}
@@ -72,21 +74,30 @@
   function drain(){while(inFlight<4&&requestQueue.length){var job=requestQueue.shift();inFlight++;(function(j){rawJSON(j.url).then(j.resolve,j.reject).then(function(){inFlight--;drain();});}(job));}}
   function json(url){return new Promise(function(resolve,reject){requestQueue.push({url:url,resolve:resolve,reject:reject});drain();});}
   function hostName(url){try{return C.httpURL(url).host;}catch(_){return 'Nevaljana adresa';}}
-  function currentScope(){return state.layers.length?state.layers[state.layers.length-1].node:app;}
+  function currentScope(){if(state.player&&!state.player.subtitles.hidden)return state.player.subtitles;return state.layers.length?state.layers[state.layers.length-1].node:app;}
   function focusable(scope){return Array.prototype.slice.call((scope||currentScope()).querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(function(n){return n.getClientRects().length>0&&!n.closest('[hidden]');});}
-  function focus(n){if(!n)return;try{n.focus({preventScroll:true});}catch(_){n.focus();}try{n.scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});}catch(_){n.scrollIntoView(false);}}
+  var smoothFocus=false,lastNavigation=0;
+  function focus(n){if(!n)return;try{n.focus({preventScroll:true});}catch(_){n.focus();}try{n.scrollIntoView({block:'nearest',inline:'nearest',behavior:smoothFocus?'smooth':'auto'});}catch(_){n.scrollIntoView(false);}}
   function initialFocus(scope){focus(focusable(scope)[0]);}
   function navigate(direction){
-    var nodes=focusable(), active=document.activeElement;
-    if(nodes.indexOf(active)<0){initialFocus();return;}
-    var a=active.getBoundingClientRect(), ax=a.left+a.width/2,ay=a.top+a.height/2,best=null,score=Infinity;
-    nodes.forEach(function(n){if(n===active)return;var r=n.getBoundingClientRect(),dx=r.left+r.width/2-ax,dy=r.top+r.height/2-ay;
-      var primary=(direction==='left'?-dx:direction==='right'?dx:direction==='up'?-dy:dy),secondary=(direction==='left'||direction==='right'?Math.abs(dy):Math.abs(dx));
-      if(primary<5)return;
-      var horizontal=direction==='left'||direction==='right';
-      var beam=horizontal?(r.bottom>a.top+3&&r.top<a.bottom-3):(r.right>a.left+3&&r.left<a.right-3);
-      var s=primary+secondary*2+(beam?0:1200);if(s<score){score=s;best=n;}
-    });focus(best);
+    var active=document.activeElement,scope=currentScope(),rail=active&&active.closest('.rail'),horizontal=direction==='left'||direction==='right';
+    var now=Date.now();smoothFocus=now-lastNavigation>160&&!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);lastNavigation=now;
+    // Horizontal rails have deterministic neighbours: avoid measuring every catalog card on every key.
+    if(rail&&horizontal){var sibling=direction==='left'?active.previousElementSibling:active.nextElementSibling;
+      while(sibling&&sibling.disabled)sibling=direction==='left'?sibling.previousElementSibling:sibling.nextElementSibling;
+      focus(sibling);smoothFocus=false;return;
+    }
+    var nodes=Array.prototype.slice.call(scope.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[tabindex="0"]'));
+    if(nodes.indexOf(active)<0){initialFocus();smoothFocus=false;return;}
+    var a=active.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2,best=null,score=Infinity;
+    nodes.forEach(function(n){if(n===active||n.closest('[hidden]'))return;
+      // In vertical navigation, only columns visible in each horizontal rail can be candidates.
+      var r=n.getBoundingClientRect();if(!r.width||!r.height)return;
+      if(!horizontal&&n.closest('.rail')&&(r.right<0||r.left>window.innerWidth))return;
+      var dx=r.left+r.width/2-ax,dy=r.top+r.height/2-ay,primary=direction==='left'?-dx:direction==='right'?dx:direction==='up'?-dy:dy,secondary=horizontal?Math.abs(dy):Math.abs(dx);
+      if(primary<5)return;var beam=horizontal?(r.bottom>a.top+3&&r.top<a.bottom-3):(r.right>a.left+3&&r.left<a.right-3);
+      var scoreHere=primary+secondary*2+(beam?0:1200);if(scoreHere<score){score=scoreHere;best=n;}
+    });focus(best);smoothFocus=false;
   }
   function pushLayer(kind,title){
     var previous=state.layers[state.layers.length-1];if(previous)previous.node.hidden=true;
@@ -160,14 +171,16 @@
     [['home','Početna'],['movie','Filmovi'],['series','Serije'],['saved','Moja lista']].forEach(function(pair){var b=button(pair[1],function(){setPage(pair[0]);},'', 'nav-'+pair[0]);if(state.page===pair[0])b.setAttribute('aria-current','page');append(nav,b);});
     append(nav,el('span','spacer'));[['search','⌕  Traži'],['settings','Postavke']].forEach(function(pair){var b=button(pair[1],function(){setPage(pair[0]);},'', 'nav-'+pair[0]);if(state.page===pair[0])b.setAttribute('aria-current','page');append(nav,b);});append(nav,button(account.status().connected?'Moj račun':'Prijavi se',openAccount,'account-nav','account-open'));append(header,nav);return header;
   }
-  function setPage(page){clearTimeout(heroTimer);state.searchGeneration++;state.page=page;render();focus(app.querySelector('[data-focus="nav-'+page+'"]'));}
+  function setPage(page){clearTimeout(heroTimer);state.searchGeneration++;state.page=page;var main=document.getElementById('main');if(main)main.scrollTop=0;render();focus(app.querySelector('[data-focus="nav-'+page+'"]'));}
   function render(){
-    var old=document.activeElement&&document.activeElement.dataset.focus;
+    var old=document.activeElement&&document.activeElement.dataset.focus,oldScreen=document.getElementById('main'),scrollTop=oldScreen?oldScreen.scrollTop:0,rails={};
+    app.querySelectorAll('[data-rail]').forEach(function(r){rails[r.dataset.rail]=r.scrollLeft;});
     app.textContent='';append(app,renderNav());var screen=el('main','screen');screen.id='main';append(app,screen);
     if(state.page==='settings')renderSettings(screen);
     else if(state.page==='search')renderSearch(screen);
     else if(state.page==='saved')renderSaved(screen);
     else renderHome(screen);
+    screen.scrollTop=scrollTop;app.querySelectorAll('[data-rail]').forEach(function(r){r.scrollLeft=rails[r.dataset.rail]||0;});
     if(!state.layers.length){var restore=old&&app.querySelector('[data-focus="'+old+'"]');if(restore)focus(restore);else initialFocus(app);}
   }
   function renderHome(screen){
@@ -283,7 +296,7 @@
     append(wrap,button('Gotovo',function(){input.value=area.value;input.dispatchEvent(new Event('change',{bubbles:true}));popLayer();},'primary'));append(l.body,wrap);focus(wrap.querySelector('button'));
   }
   function renderSettings(screen){
-    var content=el('div','page-content');append(content,el('h1','','Tvoj TV. Tvoji izvori.'),el('p','muted','LUMA 0.2.1 · zasebna aplikacija za Stremio dodatke'));var grid=el('div','settings-grid'),left=el('div'),right=el('div');
+    var content=el('div','page-content');append(content,el('h1','','Tvoj TV. Tvoji izvori.'),el('p','muted','LUMA 0.3.0 · zasebna aplikacija za Stremio dodatke'));var grid=el('div','settings-grid'),left=el('div'),right=el('div');
     var auth=account.status(),accountSection=el('section','settings-section account-section');append(accountSection,el('h2','','Stremio račun'));
     if(auth.connected){var syncStatus=el('p','note',syncLabel());syncStatus.id='account-sync-status';syncStatus.setAttribute('role','status');append(accountSection,el('p','account-email',auth.user.email),syncStatus,button('Sinkroniziraj sada',syncAccount,'primary','account-sync'),button('Odjavi ovaj TV',function(){
       var l=pushLayer('account-logout','Odjava iz LUME');append(l.body,el('p','',account.status().pending?'Neke promjene još čekaju sinkronizaciju. Prvo ih pošalji ili odjavi TV i odbaci te neposlane promjene.':'Odjavit će se samo LUMA na ovom uređaju. Tvoj Stremio račun i druge aplikacije ostaju prijavljeni.'));
@@ -303,13 +316,15 @@
     append(addonsSection,el('p','note',auth.connected?'Dodaci se preuzimaju sa Stremio računa. Dodavanje i uklanjanje ovdje mijenja i popis na računu.':'Bez prijave dodaci i napredak ostaju samo na ovom uređaju.'));
     if(auth.unsupported.length)append(addonsSection,el('p','note','Na računu ostaju povezani, ali ovaj frontend ne podržava njihov transport: '+auth.unsupported.join(', ')+'.'));
     append(left,addonsSection);
+    var subtitleSettings=el('section','settings-section');append(subtitleSettings,el('h2','','Titlovi'),el('p','note','Hrvatski se automatski odabire iz videa i tvojih dodataka. Tijekom gledanja možeš promijeniti prijevod ili isključiti titlove.'));
+    var subtitlePreference=button('',function(){config.subtitleLanguage=config.subtitleLanguage==='hr'?'off':'hr';saveSettings();subtitlePreference.textContent=config.subtitleLanguage==='hr'?'Zadani titlovi: hrvatski':'Zadani titlovi: isključeni';subtitlePreference.setAttribute('aria-pressed',String(config.subtitleLanguage==='hr'));},'toggle','subtitle-preference');subtitlePreference.textContent=config.subtitleLanguage==='hr'?'Zadani titlovi: hrvatski':'Zadani titlovi: isključeni';subtitlePreference.setAttribute('aria-pressed',String(config.subtitleLanguage==='hr'));append(subtitleSettings,subtitlePreference);append(right,subtitleSettings);
     var serverSection=el('section','settings-section');append(serverSection,el('h2','','Streaming server (neobavezno)'));
     var server=field('Adresa servera','https://tvoj-server.example/',config.server);append(serverSection,server.node,el('p','note','Server na M1 laptopu radi samo dok je laptop uključen. localhost se ne može koristiti na TV-u. Za HTTPS aplikaciju treba HTTPS server.'));
     var serverActions=el('div','actions');append(serverActions,button('Spremi server',function(){try{config.server=C.serverURL(server.input.value);saveSettings();toast('Adresa servera je spremljena.');}catch(e){toast(e.message);}},'primary','save-server'),button('Provjeri vezu',function(){testServer(server.input.value,serverResult);},'quiet','test-server'),button('Tipkovnica',function(){inputKeyboard(server.input);},'quiet'));append(serverSection,serverActions);
     var serverResult=el('p','note');serverResult.setAttribute('role','status');append(serverSection,serverResult);
     var toggle=button('Torrent preko servera: '+(config.torrents?'uključen':'isključen'),function(){config.torrents=!config.torrents;toggle.setAttribute('aria-pressed',String(config.torrents));toggle.textContent='Torrent preko servera: '+(config.torrents?'uključen':'isključen');saveSettings();},'toggle','toggle-torrents');toggle.setAttribute('aria-pressed',String(!!config.torrents));append(serverSection,toggle,el('p','note','Eksperimentalno. Server prenosi datoteku; LUMA ne uključuje automatsko transkodiranje. Podrška ovisi o video i audio formatu.'));
     append(left,serverSection);
-    var diagnostics=el('section','settings-section');append(diagnostics,el('h2','','Provjeri svoj televizor'),el('p','note','Namijenjeno Hisenseu 50A6K, firmware V0000.09.09A.P0930. Fizički TV još nije testiran.'));
+    var diagnostics=el('section','settings-section');append(diagnostics,el('h2','','Provjeri svoj televizor'),el('p','note','Namijenjeno Hisenseu 50A6K, firmware V0000.09.09A.P0930. Pokretanje LUME potvrđeno je na TV-u; podrška videa i titlova ovisi o izvoru.'));
     var v=document.createElement('video'),dl=el('dl','diagnostics');[['Preglednik',navigator.userAgent],['Veličina sučelja',window.innerWidth+' × '+window.innerHeight],['Trajno spremanje',store.available()?'Dostupno':'Samo za ovu sesiju'],['MP4 / H.264 + AAC',v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')||'Nije prijavljeno'],['Izvorni HLS',v.canPlayType('application/vnd.apple.mpegurl')||'Nije prijavljeno'],['HLS.js / MSE',window.Hls&&Hls.isSupported()?'Dostupno':'Nije dostupno'],['Veza aplikacije',location.protocol==='https:'?'HTTPS':'HTTP — lokalni ili razvojni prikaz']].forEach(function(pair){append(dl,el('dt','',pair[0]),el('dd','',pair[1]));});append(diagnostics,dl,el('p','note','Prijavljeni codec nije dokaz uspješne reprodukcije. Testiraj sliku, zvuk, premotavanje i barem 10 minuta gledanja na TV-u.'));
     append(diagnostics,button('Pokreni probni video',function(){openStreams(sample,sample.id);},'primary','sample-test'));append(right,diagnostics);
     var direct=el('section','settings-section');append(direct,el('h2','','Provjeri vlastiti video'));var videoURL=field('Izravna adresa MP4 ili HLS videa','https://…/video.mp4','','password');append(direct,videoURL.node,button('Pokreni video',function(){var s={url:videoURL.input.value,name:'Tvoj video'},p=C.playbackPlan(s,config,location.protocol);if(p.error){toast(p.error);return;}startPlayer(C.cleanMeta({id:'custom-direct',type:'movie',name:'Tvoj video'}),'custom-direct',s,p);},'quiet','direct-play'),button('Tipkovnica',function(){inputKeyboard(videoURL.input);},'quiet'));append(right,direct);
@@ -342,11 +357,11 @@
     var ordered=meta.videos.slice().sort(function(a,b){return (Number(a.season)||0)-(Number(b.season)||0)||(Number(a.episode)||0)-(Number(b.episode)||0);});var idx=ordered.findIndex(function(e){return e.id===videoId;}),next=idx>=0?ordered[idx+1]:null;
     if(next)append(controls,button('Sljedeća epizoda',function(){closeToDetail();openStreams(meta,next.id,next);},'quiet','player-next'));
     append(bottom,track,times,controls);var subtitleMenu=el('div','player-subtitles');subtitleMenu.hidden=true;append(node,video,top,status,bottom,subtitleMenu);
-    var hls=null,closed=false,started=false,lastSaved=0,resumed=false,completionSaved=false,loadingTimer,hideTimer,blobURLs=[];
+    var hls=null,closed=false,started=false,lastSaved=0,resumed=false,completionSaved=false,loadingTimer,hideTimer,subtitleController=null;
     var authAtStart=account.status(),cloudItem=authAtStart.connected&&account.item(meta.id),cloudState=cloudItem&&cloudItem.state||{},watchedSeconds=0,lastVideoTime=null;
     var baseTimeWatched=cloudState.video_id===videoId?(Number(cloudState.timeWatched)||0)/1000:0,baseOverall=(Number(cloudState.overallTimeWatched)||0)/1000;
     var player={video:video,node:node,show:showControls,toggle:togglePlay,seek:seek,subtitles:subtitleMenu};state.player=player;
-    function showControls(){node.classList.remove('idle');clearTimeout(hideTimer);if(!video.paused&&!video.ended)hideTimer=setTimeout(function(){if(subtitleMenu.hidden)node.classList.add('idle');},5500);}
+    function showControls(){node.classList.remove('idle');if(subtitleController)subtitleController.setControlsVisible(true);clearTimeout(hideTimer);if(!video.paused&&!video.ended)hideTimer=setTimeout(function(){if(subtitleMenu.hidden){node.classList.add('idle');if(subtitleController)subtitleController.setControlsVisible(false);}},5500);}
     function play(){var p=video.play();if(p&&p.catch)p.catch(function(error){if(closed||video.error||error&&error.name==='AbortError')return;if(error&&error.name==='NotAllowedError'){status.textContent='Pritisni Reproduciraj za pokretanje videa.';pause.textContent='▶ Reproduciraj';showControls();}else fail('Video se ne može pokrenuti. Provjeri format i dostupnost izvora.');});}
     function togglePlay(){if(video.paused)play();else video.pause();showControls();}
     function seek(amount){try{if(video.seekable.length){var lo=video.seekable.start(0),hi=video.seekable.end(video.seekable.length-1);video.currentTime=Math.max(lo,Math.min(hi-.1,video.currentTime+amount));}else if(isFinite(video.duration))video.currentTime=Math.max(0,Math.min(video.duration-.1,video.currentTime+amount));else toast('Ovaj izvor još ne dopušta premotavanje.');}catch(_){toast('Premotavanje nije dostupno za ovaj izvor.');}showControls();}
@@ -361,17 +376,24 @@
     }
     function bufferTimeout(){clearTimeout(loadingTimer);loadingTimer=setTimeout(function(){if(!closed){status.textContent='Video ne napreduje. Vrati se na izvore i pokušaj drugi format ili provjeri server.';showControls();}},20000);}
     function fail(message){clearTimeout(loadingTimer);status.textContent=message;showControls();}
-    function updateSubtitleMenu(){var old=document.activeElement;subtitleMenu.textContent='';append(subtitleMenu,button('Isključeni',function(){for(var i=0;i<video.textTracks.length;i++)video.textTracks[i].mode='disabled';if(hls)hls.subtitleTrack=-1;subtitleMenu.hidden=true;focus(subs);},'quiet'));
-      for(var i=0;i<video.textTracks.length;i++)(function(index){var t=video.textTracks[index];append(subtitleMenu,button(t.label||t.language||'Titlovi '+(index+1),function(){for(var j=0;j<video.textTracks.length;j++)video.textTracks[j].mode=j===index?'showing':'disabled';subtitleMenu.hidden=true;focus(subs);},'quiet'));}(i));
-      if(hls)(hls.subtitleTracks||[]).forEach(function(t,i){append(subtitleMenu,button(t.name||t.lang||'HLS titlovi '+(i+1),function(){hls.subtitleTrack=i;hls.subtitleDisplay=true;subtitleMenu.hidden=true;focus(subs);},'quiet'));});
-      if(subtitleMenu.children.length===1)append(subtitleMenu,el('p','note','Izvor nije ponudio podržane titlove.'));
-      if(!subtitleMenu.hidden&&(!old||!old.isConnected))initialFocus(subtitleMenu);
+    function updateSubtitleMenu(view){
+      var old=document.activeElement,oldKey=old&&old.dataset.focus;subtitleMenu.textContent='';
+      append(subtitleMenu,el('h3','','Titlovi'));
+      function option(label,id,pressed){var b=button(label,function(){subtitleController.select(id);subtitleMenu.hidden=true;focus(subs);showControls();},'quiet','subtitle-'+id);b.setAttribute('aria-pressed',String(pressed));append(subtitleMenu,b);}
+      option('Automatski · hrvatski','auto',view.automatic);option('Isključeni','off',view.off);
+      view.choices.forEach(function(t){option(t.label+(t.failed?' · pokušaj opet':''),t.id,!view.automatic&&view.selected===t.id);});
+      var message=view.loading?'Tražim i učitavam titlove…':view.error||(!view.choices.some(function(t){return t.croatian;})?'Hrvatski titlovi nisu pronađeni za ovaj izvor.':'');
+      if(view.failedProviders&&!view.loading)message+=(message?' ':'')+'Neki dodaci nisu odgovorili.';
+      if(message)append(subtitleMenu,el('p','subtitle-note',message));
+      subs.textContent=view.selected?(view.choices.find(function(t){return t.id===view.selected&&t.croatian;})?'Titlovi · HR':'Titlovi · uključeni'):'Titlovi';
+      if(!subtitleMenu.hidden&&subtitleMenu.contains(old)===false){var restored=oldKey&&subtitleMenu.querySelector('[data-focus="'+oldKey+'"]');focus(restored||subtitleMenu.querySelector('button'));}
     }
-    // Fetch external VTT as text and attach a same-origin blob. No SRT conversion or authenticated proxy.
-    (Array.isArray(stream.subtitles)?stream.subtitles:[]).slice(0,12).forEach(function(s){if(!s||!C.safeImage(s.url)||!/\.vtt(?:[?#]|$)/i.test(s.url))return;
-      var x=new XMLHttpRequest();x.open('GET',s.url,true);x.timeout=12000;x.onload=function(){if(closed||x.status!==200||x.responseText.length>2000000||!/^\uFEFF?WEBVTT/.test(x.responseText))return;var u=URL.createObjectURL(new Blob([x.responseText],{type:'text/vtt'}));blobURLs.push(u);var t=el('track');t.kind='subtitles';t.label=s.lang||'Titlovi';t.srclang=s.lang||'und';t.src=u;append(video,t);t.addEventListener('load',updateSubtitleMenu);updateSubtitleMenu();};x.send();
+    subtitleController=window.LumaSubtitles.create({video:video,preferred:config.subtitleLanguage,protocol:location.protocol,onChange:updateSubtitleMenu});
+    subtitleController.add(stream.subtitles,'Izvor');
+    var subtitleJobs=meta._sample||videoId==='custom-direct'?[]:state.addons.filter(function(a){return C.supports(a.manifest,'subtitles',meta.type,videoId);}).map(function(a){
+      return json(C.resourceURL(a.url,'subtitles',meta.type,videoId,window.LumaSubtitles.extras(stream))).then(function(data){return {items:data.subtitles,provider:a.manifest.name};});
     });
-    updateSubtitleMenu();
+    subtitleController.providers(subtitleJobs);
     video.addEventListener('loadedmetadata',function(){duration.textContent=isFinite(video.duration)?C.formatTime(video.duration):'Uživo';if(!resumed){resumed=true;var saved=history[meta.type+':'+videoId],point=C.resumePoint(saved,video.duration);if(point)try{video.currentTime=point;}catch(_){} }});
     video.addEventListener('seeking',function(){lastVideoTime=null;});
     video.addEventListener('timeupdate',function(){var current=video.currentTime;if(!video.seeking&&lastVideoTime!=null){var delta=current-lastVideoTime;if(delta>0&&delta<3)watchedSeconds+=delta;}lastVideoTime=video.seeking?null:current;elapsed.textContent=C.formatTime(current);bar.style.width=(isFinite(video.duration)&&video.duration?Math.min(100,current/video.duration*100):0)+'%';if(!video.paused&&current>0){status.textContent='';clearTimeout(loadingTimer);}saveProgress(false);});
@@ -382,10 +404,10 @@
     video.addEventListener('ended',function(){saveProgress(true);status.textContent=next?'Epizoda je završila. Odaberi Sljedeća epizoda.':'Video je završio.';showControls();});
     video.addEventListener('error',function(){var code=video.error&&video.error.code;fail(code===3?'TV ne može dekodirati ovaj video ili zvuk. Odaberi drugi izvor.':code===4?'Format ili adresa nisu podržani. Pokušaj MP4 s H.264/AAC ili kompatibilni HLS.':'Video se ne može učitati (mreža ili izvor). Provjeri vezu i pokušaj drugi izvor.');});
     node.addEventListener('mousemove',showControls);node.addEventListener('click',showControls);
-    layer.cleanup=function(){saveProgress(true);closed=true;clearTimeout(loadingTimer);clearTimeout(hideTimer);if(hls)hls.destroy();video.pause();video.removeAttribute('src');video.load();blobURLs.forEach(function(u){URL.revokeObjectURL(u);});state.player=null;};
+    layer.cleanup=function(){saveProgress(true);closed=true;clearTimeout(loadingTimer);clearTimeout(hideTimer);if(subtitleController)subtitleController.destroy();if(hls)hls.destroy();video.pause();video.removeAttribute('src');video.load();state.player=null;};
     bufferTimeout();focus(pause);
     if(plan.hls&&!video.canPlayType('application/vnd.apple.mpegurl')){
-      if(window.Hls&&Hls.isSupported()){hls=new Hls({maxBufferLength:20,maxMaxBufferLength:40,backBufferLength:20,capLevelToPlayerSize:true,enableWorker:true});hls.attachMedia(video);hls.on(Hls.Events.MEDIA_ATTACHED,function(){hls.loadSource(plan.url);});hls.on(Hls.Events.MANIFEST_PARSED,play);hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,updateSubtitleMenu);hls.on(Hls.Events.ERROR,function(_,data){if(data.fatal)fail('HLS reprodukcija nije uspjela. Provjeri izvor, format i CORS dopuštenja.');});}
+      if(window.Hls&&Hls.isSupported()){hls=new Hls({maxBufferLength:20,maxMaxBufferLength:40,backBufferLength:20,capLevelToPlayerSize:true,enableWorker:true});subtitleController.setHls(hls);hls.attachMedia(video);hls.on(Hls.Events.MEDIA_ATTACHED,function(){hls.loadSource(plan.url);});hls.on(Hls.Events.MANIFEST_PARSED,play);hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,subtitleController.refresh);hls.on(Hls.Events.ERROR,function(_,data){if(data.fatal)fail('HLS reprodukcija nije uspjela. Provjeri izvor, format i CORS dopuštenja.');});}
       else fail('Ovaj preglednik ne prijavljuje podršku za HLS ni MediaSource. Pokušaj izravni MP4.');
     } else {video.src=plan.url;play();}
   }
