@@ -65,6 +65,26 @@
   function safeImage(value) {
     try { return httpURL(value).href; } catch (_) { return ''; }
   }
+  function youtubeId(value) {
+    if(typeof value!=='string')return '';
+    if(/^[a-zA-Z0-9_-]{11}$/.test(value))return value;
+    try {var u=httpURL(value),host=u.hostname.toLowerCase(),id='';
+      if(host==='youtu.be')id=u.pathname.slice(1);
+      else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].indexOf(host)>=0){
+        if(u.pathname==='/watch')id=u.searchParams.get('v');else if(/^\/(embed|shorts)\//.test(u.pathname))id=u.pathname.split('/')[2];
+      }return /^[a-zA-Z0-9_-]{11}$/.test(id||'')?id:'';
+    }catch(_){return '';}
+  }
+  function trailerSources(meta) {
+    var seen=Object.create(null),out=[];
+    [].concat(meta&&Array.isArray(meta.trailerStreams)?meta.trailerStreams:[],meta&&Array.isArray(meta.trailers)?meta.trailers:[]).slice(0,60).forEach(function(t){
+      if(!t||typeof t!=='object'||t.drm||t.licenseUrl||t.behaviorHints&&t.behaviorHints.proxyHeaders)return;
+      var id=youtubeId(t.ytId||t.source||t.externalUrl||t.url),item;
+      if(id)item={kind:'youtube',ytId:id,title:String(t.title||t.name||'Trailer').slice(0,160)};
+      else if(t.url){try{var u=httpURL(t.url);if(/(^|\.)youtube(?:-nocookie)?\.com$|(^|\.)youtu\.be$/.test(u.hostname))return;item={kind:'video',url:u.href,mimeType:String(t.mimeType||'').slice(0,100),title:String(t.title||t.name||'Trailer').slice(0,160)};}catch(_){}}
+      if(!item)return;var k=item.ytId||item.url;if(seen[k])return;seen[k]=true;out.push(item);
+    });return out.slice(0,12);
+  }
   function cleanMeta(m, source) {
     if (!m || typeof m.id !== 'string' || typeof m.type !== 'string' || typeof m.name !== 'string') return null;
     return {
@@ -72,6 +92,7 @@
       description:String(m.description || '').slice(0,7000), poster:safeImage(m.poster), background:safeImage(m.background),
       releaseInfo:String(m.releaseInfo || '').slice(0,80), imdbRating:String(m.imdbRating || '').slice(0,12),
       runtime:String(m.runtime || '').slice(0,80), genres:Array.isArray(m.genres) ? m.genres.slice(0,5).map(String) : [],
+      trailers:trailerSources(m),
       posterShape:['poster','landscape','square'].indexOf(m.posterShape)>=0?m.posterShape:'poster',
       behaviorHints:m.behaviorHints&&typeof m.behaviorHints==='object'?JSON.parse(JSON.stringify(m.behaviorHints)):{},
       videos:Array.isArray(m.videos) ? m.videos.filter(function(v){return v && typeof v.id==='string';}).slice(0,3000) : [],
@@ -102,7 +123,7 @@
       var sources = (Array.isArray(stream.sources) ? stream.sources : []).filter(function(x){return typeof x === 'string' && /^(tracker:|dht:)/.test(x);}).slice(0,30);
       if (sources.length) url += '?' + sources.map(function(s){return 'tr=' + encodeURIComponent(s);}).join('&');
       kind = 'torrent';
-    } else if (stream.ytId) return {error:'YouTube izvori i automatski traileri nisu podržani u ovoj verziji.'};
+    } else if (stream.ytId) return {error:'Otvori trailer tipkom Trailer. YouTube nije izravni izvor za ovaj filmski player.'};
     else if (stream.externalUrl) return {error:'Ovo je poveznica na drugu aplikaciju, nije izravni video. Otvori je u izvornom servisu.'};
     else return {error:'Ovaj tip izvora nije podržan u ovoj verziji.'};
     if (pageProtocol === 'https:' && /^http:/.test(url)) return {error:'Ova HTTPS aplikacija ne može sigurno otvoriti HTTP izvor. Potreban je HTTPS izvor/server s valjanim certifikatom.'};
@@ -141,5 +162,5 @@
     if (!isFinite(s) || s < 0) return '0:00';
     s=Math.floor(s);return Math.floor(s/60)+':'+('0'+s%60).slice(-2);
   }
-  return {DEFAULT_ADDON:DEFAULT_ADDON,httpURL:httpURL,manifestURL:manifestURL,serverURL:serverURL,resourceURL:resourceURL,supports:supports,extras:extras,catalogArgs:catalogArgs,validateManifest:validateManifest,cleanMeta:cleanMeta,uniqueMetas:uniqueMetas,key:key,safeImage:safeImage,playbackPlan:playbackPlan,planSources:planSources,storageAdapter:storageAdapter,resumePoint:resumePoint,formatTime:formatTime};
+  return {DEFAULT_ADDON:DEFAULT_ADDON,httpURL:httpURL,manifestURL:manifestURL,serverURL:serverURL,resourceURL:resourceURL,supports:supports,extras:extras,catalogArgs:catalogArgs,validateManifest:validateManifest,cleanMeta:cleanMeta,youtubeId:youtubeId,trailerSources:trailerSources,uniqueMetas:uniqueMetas,key:key,safeImage:safeImage,playbackPlan:playbackPlan,planSources:planSources,storageAdapter:storageAdapter,resumePoint:resumePoint,formatTime:formatTime};
 }));
