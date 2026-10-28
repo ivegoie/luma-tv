@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.6.1**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.6.2**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -51,3 +51,9 @@ U 0.6.1 izostavljen je katalog publicdomainmovies iz prikaza.
 0.6.1 dodaje postupno učitavanje kartica, predmemoriju kataloga, gledanje jednim klikom do 4K, sljedeću epizodu uz 15-sekundno odbrojavanje, raspored i skrivanje kategorija te osobne ocjene. Preskoči uvod koristi isključivo javni IntroDB API kad postoje vremena za epizodu: https://introdb.app/docs/api. Postavke i ocjene čuvaju se na uređaju po računu.
 
 Pretraga 0.6.1 automatski kreće pet sekundi nakon zadnjeg znaka; početna uputa za unos je uklonjena.
+
+## Zvuk i traileri 0.6.2
+
+Automatski odabir daje niži prioritet izvorima čije audiooznake uređaj prijavljuje kao nepodržane. Zadržana je kvaliteta do 4K i ručni izbor. Oznake izvora i prijava podrške nisu jamstvo uspješne reprodukcije; LUMA ne pretvara zvuk na TV-u. Player pokreće video s uključenim zvukom i, kada je dostupan popis audiozapisa, uključi prvi samo ako nijedan već nije odabran.
+
+Izravni video/HLS trailer ima prednost kad ga metapodaci dodatka već sadrže. Za ostale ostaje YouTube. Nema novog servisa ni pretplate.

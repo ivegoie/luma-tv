@@ -83,7 +83,7 @@
       if(id)item={kind:'youtube',ytId:id,title:String(t.title||t.name||'Trailer').slice(0,160)};
       else if(t.url){try{var u=httpURL(t.url);if(/(^|\.)youtube(?:-nocookie)?\.com$|(^|\.)youtu\.be$/.test(u.hostname))return;item={kind:'video',url:u.href,mimeType:String(t.mimeType||'').slice(0,100),title:String(t.title||t.name||'Trailer').slice(0,160)};}catch(_){}}
       if(!item)return;var k=item.ytId||item.url;if(seen[k])return;seen[k]=true;out.push(item);
-    });return out.slice(0,12);
+    });return out.filter(function(t){return t.kind==='video';}).concat(out.filter(function(t){return t.kind==='youtube';})).slice(0,12);
   }
   function cleanMeta(m, source) {
     if (!m || typeof m.id !== 'string' || typeof m.type !== 'string' || typeof m.name !== 'string') return null;
