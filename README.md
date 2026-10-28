@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.3**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.4**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -109,3 +109,13 @@ TV dobiva kratke prijelaze fokusa, kartice, slike, naslova i izbornika od pribli
 Postavke → Dijagnostika prikazuju lokalna vremena prvog kataloga, prvog kompatibilnog izvora, odabira i pokretanja videa. Odziv tipki mjeri se od vremenske oznake događaja do sljedećeg kadra i čuva najviše 60 uzoraka, bez neprekidne petlje mjerenja. To ne mjeri ukupnu latenciju fizičkog daljinskog ili zaslona. Memorija JavaScripta prikazuje se samo ako je preglednik prijavljuje; nije ukupni RAM televizora. Podaci se ne šalju niti trajno spremaju. Osvježi mjerenja ponovno očitava trenutačno stanje.
 
 Provjera: 159 testova i izolirani preglednik s uključenim TV načinom. U scenariju s tri dodatka odabran je 1080p izvor nakon približno 3,1 s, prije odgovora sporog dodatka nakon 8 s; kasni bolji izvor nije promijenio video. Provjereni su postupni ručni izbor, nepomicanje fokusa pri dopuni, CSS prijelaz kartice od 150 ms i izostanak Pako/GSAP/HLS preuzimanja pri gostujućem pregledu i izravnom MP4-u. To je simulacija na laptopu; stvarna mjerenja fizičkog Hisensea i dugotrajnog rada još nisu prikupljena.
+
+## Brži prvi prikaz kataloga · 0.7.4
+
+Nakon prvog uspješnog učitavanja LUMA pamti najviše dva početna reda s po 24 naslova. Pri ponovnom otvaranju odmah prikazuje taj mali pregled, a svježi katalog dohvaća u pozadini. Prvo otvaranje bez spremljenog pregleda i dalje ovisi o brzini dodatka. Fokusirana kartica i njezin trailer ne precrtavaju se kad stigne osvježenje. Postojeće lagane animacije nisu mijenjane.
+
+Pregled je lokalni i vezan uz točan račun i konfiguraciju dodataka. Odjava ili promjena računa ga briše, a druga konfiguracija ga ne može koristiti. Svaki red vrijedi najviše 24 sata. Za prijavu bez trajnog spremanja pregled ostaje samo u memoriji. Sadrži samo sažete metapodatke, javne podržane slike i YouTube identifikatore; nema izravnih video/trailer poveznica, adresa dodataka s ključevima, epizoda, povijesti ni napretka. Puna ograničena veličina je 96.000 znakova JSON-a (do približno 192 KB za UTF-16 tekst). Nedostatak prostora ne isključuje postojeće spremanje Stremio prijave; LUMA nastavlja preko mreže. Neuspjela mrežna obnova može zadržati još važeći pregled, a potvrđeno prazni katalozi uklanjaju stari pregled.
+
+Uklonjeni su dvostruko početno iscrtavanje, ponovljeno čitanje biblioteke i nepotrebna kopija biblioteke pri početku sinkronizacije. Početni katalozi imaju prednost pred ostalim zahtjevima; postojeći zadani katalog i zadnji spremljeni početni izvori obrađuju se ranije. Svi korisnikovi dodaci i dalje ostaju dostupni. Prvi pristigli katalog više nema obveznu dodatnu stanku od 80 ms.
+
+Dijagnostika odvaja Prvi katalog od Svježi katalog: prvi može biti spremljeni prikaz, drugi pokazuje vrijeme dolaska odgovora za obnovu. U izoliranom TV prikazu na laptopu, uz namjerno kašnjenje filmskog kataloga od 2,5 s, prethodna verzija je prvi katalog zabilježila nakon 2634 ms, nova bez predmemorije nakon 2599 ms, a novo ponovno otvaranje nakon 58 ms uz svježi odgovor nakon 2565 ms. To su pojedinačna kontrolirana mjerenja, bez tvrdnje o jednakim vremenima na fizičkom TV-u. Provjereno je očuvanje fokusa dok pozadinska obnova vraća izmijenjene naslove. Svih 171 testova prolazi, uključujući istek, promjenu računa/dodataka, privatnost, prijavu samo za sesiju, oštećene podatke i nedostatak prostora.

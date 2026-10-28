@@ -85,7 +85,7 @@
     var error='';
     function time(){lastTime=Math.max(clock(),lastTime+1);return lastTime;}
     function persist(){if(session&&session.remember){store.write('stremio-session',session);store.write('stremio-cache',data);}}
-    function status(){var list=addonList(data.addons);return {connected:!!session,user:session?copy(session.user):null,syncing:!!syncing,pending:Object.keys(data.pending).length,lastSync:data.lastSync||0,error:error,addonCount:data.addons.length,unsupported:list.unsupported};}
+    function status(){var list=addonList(data.addons);return {connected:!!session,persistent:!!(session&&session.remember),user:session?copy(session.user):null,syncing:!!syncing,pending:Object.keys(data.pending).length,lastSync:data.lastSync||0,error:error,addonCount:data.addons.length,unsupported:list.unsupported};}
     function afterCodec(work){var version=epoch;return ready().then(function(){if(version!==epoch)throw err('Račun je promijenjen.');return work();});}
     function emit(kind){notify(kind,status());}
     function ticket(){if(!session)throw err('Prijavi se u Stremio.');return {epoch:epoch,key:session.authKey};}
