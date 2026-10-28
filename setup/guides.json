@@ -1,0 +1,442 @@
+{
+  "updated": "2026-10-28",
+  "platforms": [
+    {
+      "id": "android",
+      "title": "Google / Android TV",
+      "brand": "SONY · TCL · PHILIPS · DRUGI",
+      "summary": "APK · bez laptopa nakon objave paketa",
+      "references": [
+        {
+          "label": "Android TV aplikacije",
+          "href": "https://developer.android.com/training/tv/get-started/create"
+        },
+        {
+          "label": "Downloader",
+          "href": "https://www.aftvnews.com/downloader/"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "TV PAKET U PRIPREMI",
+          "description": "Jedan TV APK za Android TV i Google TV, od Androida 8.0. Mobitel služi za ovaj vodič; datoteka se preuzima i instalira na televizoru. Paket još nije objavljen niti provjeren na fizičkom Android TV-u.",
+          "steps": [
+            {
+              "title": "Provjeri sustav",
+              "body": "Na TV-u otvori Settings → System / Device Preferences → About. Mora pisati Android TV ili Google TV. Na nekim modelima nazivi izbornika se razlikuju."
+            },
+            {
+              "title": "Instaliraj Downloader na TV",
+              "body": "U trgovini Google Play na televizoru pronađi Downloader by AFTVnews i instaliraj ga. Ovu stranicu možeš pratiti na iPhoneu ili Android mobitelu.",
+              "actions": [
+                {
+                  "label": "Službeni Downloader",
+                  "href": "https://www.aftvnews.com/downloader/"
+                }
+              ]
+            },
+            {
+              "title": "Preuzmi TV APK kad bude objavljen",
+              "body": "LUMA APK još se priprema. Preuzimanje će biti dostupno na ovom koraku nakon objave.",
+              "note": "LUMA trenutačno nije objavljena u Google Play trgovini. Oznaka pripreme paketa nije potvrda rada na svim modelima."
+            },
+            {
+              "title": "Potvrdi instalaciju na TV-u",
+              "body": "Kad APK bude dostupan, preuzmi ga u Downloaderu. Na zahtjev sustava dopusti instalaciju samo Downloaderu i potvrdi instalaciju LUME. Nakon instalacije možeš ponovno isključiti to dopuštenje.",
+              "note": "Ne uklanjaj postojeći Stremio. LUMA ima vlastitu ikonu i podatke."
+            },
+            {
+              "title": "Pokreni LUMU i prijavi se",
+              "body": "U Apps otvori LUMA. Odaberi Prijavi se, skeniraj Stremio QR mobitelom i potvrdi račun na Stremijevoj stranici. Laptop i lokalni server nisu potrebni za kompatibilne izravne izvore iz tvojih dodataka."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "vidaa",
+      "title": "VIDAA",
+      "brand": "HISENSE · ODREĐENI TOSHIBA MODELI",
+      "summary": "Ikona potvrđena na Hisense 50A6K",
+      "references": [
+        {
+          "label": "Sidee i podržani sustavi",
+          "href": "https://github.com/Empi9245/Sidee"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "WEB INSTALACIJA MOBITELOM NIJE DOSTUPNA",
+          "description": "LUMA je potvrđeno dodana kao zasebna ikona na Hisense 50A6K, firmware V0000.09.09A.P0930. Sidee trenutačno traži Windows ili Mac. Njegov QR za mobitel ne uklanja potrebu za računalom tijekom instalacije.",
+          "steps": [
+            {
+              "title": "Ako LUMA već ima ikonu",
+              "body": "Na TV-u otvori Home → Apps → LUMA. Instalacija se ne ponavlja. Nakon ranije registracije ikona otvara objavljenu LUMU i Sidee ne mora raditi.",
+              "note": "Ovo je trenutačni način rada na korisnikovu Hisense 50A6K."
+            },
+            {
+              "title": "Za novu instalaciju provjeri model",
+              "body": "Na TV-u otvori Settings → Support → System Info. Zapiši Model i Software Version. Sideeova podrška ovisi o firmwareu; naziv VIDAA sam po sebi nije potvrda kompatibilnosti."
+            },
+            {
+              "title": "Poveži Sidee s televizorom",
+              "body": "Trenutačni provjereni postupak traži računalo: pokreni Sidee na Windowsu ili Macu, spoji ga na istu kućnu mrežu kao TV, odaberi Find TV i Request code. Unesi PIN prikazan na TV-u.",
+              "actions": [
+                {
+                  "label": "Sidee — izvor i preuzimanje",
+                  "href": "https://github.com/Empi9245/Sidee/releases"
+                }
+              ],
+              "note": "Obični Sidee ne prima proizvoljan LUMA URL u svojem dashboardu. Za LUMU služi zaseban pomoćnik iz repozitorija."
+            },
+            {
+              "title": "Dodaj samo LUMA ikonu",
+              "body": "LUMA pomoćnik koristi postojeću, PIN-odobrenu Sidee vezu, provjerava popis aplikacija i dodaje samo ID lumatvdebug. Ne briše postojeće aplikacije. Adresa aplikacije je stalni HTTPS URL.",
+              "actions": [
+                {
+                  "label": "LUMA pomoćnik i upute",
+                  "href": "https://github.com/ivegoie/luma-tv/tree/main/platforms/vidaa"
+                }
+              ],
+              "note": "Za ovaj korak još nema web instalera koji izravno radi sa Safarija ili Chromea na mobitelu."
+            },
+            {
+              "title": "Pokreni LUMU bez računala",
+              "body": "Na TV-u otvori novu LUMA ikonu i prijavi Stremio QR-om. Računalo možeš ugasiti. Reprodukcija bez laptopa traži kompatibilne izravne izvore; obični torrent ne postaje izravni video samom instalacijom aplikacije."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webos",
+      "title": "webOS",
+      "brand": "LG",
+      "summary": "IPK · potreban Developer Mode",
+      "references": [
+        {
+          "label": "LG Developer Mode",
+          "href": "https://webostv.developer.lge.com/develop/getting-started/developer-mode-app"
+        },
+        {
+          "label": "webOS Dev Manager",
+          "href": "https://github.com/webosbrew/dev-manager-desktop"
+        }
+      ],
+      "routes": {
+        "ios": {
+          "status": "IPK PROJEKT PRIPREMLJEN · MOBILNA INSTALACIJA NIJE POTVRĐENA",
+          "description": "LG koristi IPK i Developer Mode. Safari sam ne prenosi taj paket preko LG-ove razvojne veze. Pripremljen je projekt LUMA aplikacije, ali IPK još nije objavljen i instalacija s iPhonea nije potvrđena.",
+          "steps": [
+            {
+              "title": "Pripremi LG račun",
+              "body": "Na mobitelu otvori LG Developer stranicu i prijavi se svojim LG računom ili izradi račun prema njihovim uputama.",
+              "actions": [
+                {
+                  "label": "LG Developer",
+                  "href": "https://webostv.developer.lge.com/"
+                }
+              ]
+            },
+            {
+              "title": "Uključi Developer Mode na TV-u",
+              "body": "Na LG televizoru u Apps / LG Content Store instaliraj Developer Mode. Otvori ga, prijavi se LG računom i uključi Dev Mode Status. Pričekaj ponovno pokretanje TV-a.",
+              "note": "Nemoj uključivati Clear Cache Data: ta opcija uklanja predmemoriju svih aplikacija."
+            },
+            {
+              "title": "Uključi Key Server",
+              "body": "Ponovno otvori Developer Mode, uključi Key Server i zapiši IP adresu te Passphrase prikazanu na TV-u. Koristi istu kućnu mrežu za TV i uređaj za instalaciju."
+            },
+            {
+              "title": "Instaliraj IPK preko LG razvojne veze",
+              "body": "Uobičajeni potvrđeni alat webOS Dev Manager radi na Windowsu, Macu i Linuxu: dodaj TV, unesi njegovu adresu i Passphrase, zatim instaliraj objavljeni LUMA IPK. iPhone web postupak još nije dostupan.",
+              "actions": [
+                {
+                  "label": "webOS Dev Manager",
+                  "href": "https://github.com/webosbrew/dev-manager-desktop/releases"
+                }
+              ],
+              "note": "Izvorni LUMA webOS projekt je spreman za izradu paketa; fizički LG TV još nije provjeren."
+            },
+            {
+              "title": "Pokreni i održavaj instalaciju",
+              "body": "Nakon instalacije otvori LUMA ikonu i prijavi Stremio QR-om. U Developer Mode redovito provjeri Remain Session i pritisni EXTEND prije isteka. Ako se razvojna sesija ugasi, LG uklanja tako instalirane aplikacije."
+            }
+          ]
+        },
+        "android": {
+          "status": "IPK PROJEKT PRIPREMLJEN · NEMA IZRAVNOG WEB INSTALERA",
+          "description": "LG koristi IPK i Developer Mode. Android ima mogućnost razvojnih alata kroz Termux, ali taj postupak još nije potvrđen za LUMU i nije instalacija jednim klikom u pregledniku. U nastavku je službeni postupak s LG razvojnim alatima.",
+          "steps": [
+            {
+              "title": "Pripremi LG račun",
+              "body": "Na mobitelu otvori LG Developer stranicu i prijavi se svojim LG računom ili izradi račun.",
+              "actions": [
+                {
+                  "label": "LG Developer",
+                  "href": "https://webostv.developer.lge.com/"
+                }
+              ]
+            },
+            {
+              "title": "Uključi Developer Mode",
+              "body": "Na LG TV-u instaliraj Developer Mode iz Apps / LG Content Storea. Prijavi se, uključi Dev Mode Status i pričekaj ponovno pokretanje.",
+              "note": "Nemoj uključivati Clear Cache Data jer zahvaća i druge aplikacije."
+            },
+            {
+              "title": "Pripremi vezu s televizorom",
+              "body": "Ponovno otvori Developer Mode. Uključi Key Server i zapiši IP adresu i Passphrase. TV i uređaj s alatom za instalaciju moraju biti na istoj mreži."
+            },
+            {
+              "title": "Instaliraj LUMA IPK",
+              "body": "Trenutačno dokumentirani postupak koristi webOS Dev Manager na računalu: dodaj TV njegovom adresom, potvrdi Passphrase i odaberi LUMA IPK. Paket još nije objavljen. Mobilna inačica tog postupka ostaje nepotvrđena.",
+              "actions": [
+                {
+                  "label": "webOS Dev Manager",
+                  "href": "https://github.com/webosbrew/dev-manager-desktop/releases"
+                }
+              ]
+            },
+            {
+              "title": "Otvori LUMU i prati sesiju",
+              "body": "U TV izborniku pokreni LUMA ikonu i potvrdi Stremio QR mobitelom. U Developer Mode prije isteka Remain Session odaberi EXTEND. Laptop nije potreban za gledanje kompatibilnih izravnih izvora nakon instalacije."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tizen",
+      "title": "Tizen",
+      "brand": "SAMSUNG",
+      "summary": "Treba WGT i potpis za televizor",
+      "references": [
+        {
+          "label": "Samsung — TV Device",
+          "href": "https://developer.samsung.com/smarttv/develop/getting-started/using-sdk/tv-device.html"
+        },
+        {
+          "label": "TizenBrew Installer",
+          "href": "https://github.com/reisxd/TizenBrewInstaller"
+        }
+      ],
+      "routes": {
+        "ios": {
+          "status": "LUMA WGT JOŠ NIJE SPREMAN",
+          "description": "Samsung koristi vlastiti potpisani WGT paket. Ne prima Android APK. Za LUMU još nema potpisanog WGT-a ni provjerenog postupka instalacije s iPhonea.",
+          "steps": [
+            {
+              "title": "Provjeri model i verziju",
+              "body": "U Settings → Support → About This TV zapiši model i verziju softvera. Način potpisivanja i instalacije ovisi o generaciji Samsunga."
+            },
+            {
+              "title": "Pripremi razvojni način tek uz paket",
+              "body": "Službeni postupak koristi Developer Mode u izborniku Apps i Tizen Studio s potpisanim paketom. Za LUMU još nije dovršen. Nema potrebe sada mijenjati TV postavke."
+            },
+            {
+              "title": "iPhone web instalacija još nije dostupna",
+              "body": "Safari ne može zamijeniti Samsungov lokalni razvojni alat. Za instalaciju bez računala treba zasebno mobilno rješenje ili objava LUME u Samsung Apps trgovini. Nijedno još nije spremno.",
+              "actions": [
+                {
+                  "label": "Službeni Samsung postupak",
+                  "href": "https://developer.samsung.com/smarttv/develop/getting-started/using-sdk/tv-device.html"
+                }
+              ]
+            }
+          ]
+        },
+        "android": {
+          "status": "LUMA WGT JOŠ NIJE SPREMAN",
+          "description": "TizenBrew Installer dokumentira Android put preko Termuxa. To je dodatni alat, uz Samsungovo potpisivanje; obična web stranica ne obavlja samu instalaciju. LUMA WGT još nije izrađen i provjeren.",
+          "steps": [
+            {
+              "title": "Provjeri model TV-a",
+              "body": "U Settings → Support → About This TV zapiši model i verziju softvera. Samsungova pravila za certifikate razlikuju se među generacijama."
+            },
+            {
+              "title": "Pripremi Developer Mode",
+              "body": "Kad bude dostupan odgovarajući paket, Samsungov postupak počinje u Apps / App Settings: unesi 12345, uključi Developer Mode, zadaj adresu uređaja s instalacijskim alatom i ponovno pokreni TV. Izgled izbornika može se razlikovati po modelu."
+            },
+            {
+              "title": "Android ima dodatni put preko Termuxa",
+              "body": "TizenBrew Installer objavljuje korake za Android preko Termuxa, Node.js-a i svojeg alata. Treba paket koji je pravilno potpisan za TV. Ta ruta još nije potvrđena s LUMOM.",
+              "actions": [
+                {
+                  "label": "Izvorne Android upute TizenBrewa",
+                  "href": "https://github.com/reisxd/TizenBrewInstaller#tizenbrew-installer-desktop"
+                }
+              ],
+              "note": "Sama instalacija TizenBrewa ne instalira LUMU."
+            },
+            {
+              "title": "Nastavi tek uz LUMA WGT",
+              "body": "Za ovaj sustav još nije objavljen LUMA instalacijski paket. Ne preimenuj APK u WGT: time se aplikacija ne pretvara u Samsungovu aplikaciju."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fireos",
+      "title": "Fire OS",
+      "brand": "AMAZON FIRE TV · ANDROID OSNOVA",
+      "summary": "APK put · provjeri točan sustav",
+      "references": [
+        {
+          "label": "Amazon — instalacija APK-a",
+          "href": "https://developer.amazon.com/docs/fire-tv/installing-and-running-your-app.html"
+        },
+        {
+          "label": "Downloader",
+          "href": "https://www.aftvnews.com/downloader/"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "EKSPERIMENTALNO · APK JOŠ NIJE OBJAVLJEN",
+          "description": "Ovi koraci vrijede za uređaje s Fire OS-om na Android osnovi. Ne vrijede za Amazon Vega OS. APK projekt koristi Android TV značajke; kompatibilnost s konkretnim Fire TV modelom još nije potvrđena.",
+          "steps": [
+            {
+              "title": "Provjeri piše li Fire OS",
+              "body": "Otvori Settings → My Fire TV / Device & Software → About. Ako uređaj koristi Vega OS, ovaj APK postupak nije odgovarajući."
+            },
+            {
+              "title": "Instaliraj Downloader na TV",
+              "body": "U Amazon Appstoreu potraži Downloader by AFTVnews i instaliraj ga. Upute možeš pratiti na iPhoneu ili Android mobitelu.",
+              "actions": [
+                {
+                  "label": "Službeni Downloader",
+                  "href": "https://www.aftvnews.com/downloader/"
+                }
+              ]
+            },
+            {
+              "title": "Preuzmi LUMA APK kad bude dostupan",
+              "body": "TV APK još nije objavljen. Nakon objave treba ga preuzeti iz LUMA izvora, dopustiti Downloaderu instalaciju aplikacija na zahtjev sustava i potvrditi instalaciju.",
+              "note": "Na nekim modelima Developer Options otkriva se višestrukim odabirom naziva uređaja u About. Koristi postupak za svoj model."
+            },
+            {
+              "title": "Pokreni LUMU",
+              "body": "LUMU nakon instalacije pronađi u Apps ili Settings → Applications → Manage Installed Applications. Prijavi se Stremio QR-om. To ne jamči podršku svih audio i videoformata."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "vega",
+      "title": "Vega OS",
+      "brand": "ODREĐENI AMAZON FIRE TV MODELI",
+      "summary": "Nema LUMA paketa za ovaj sustav",
+      "references": [
+        {
+          "label": "Amazon Developer",
+          "href": "https://developer.amazon.com/"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "JOŠ NIJE PODRŽANO",
+          "description": "Za Vega OS još nije pripremljen poseban LUMA paket. Android TV APK nije instalacijski paket za ovaj sustav.",
+          "steps": [
+            {
+              "title": "Provjeri sustav u About",
+              "body": "Zapiši puni model i verziju Vega OS-a. Nemoj slijediti Fire OS / Android upute samo zato što na uređaju piše Fire TV."
+            },
+            {
+              "title": "Potreban je zaseban Vega paket",
+              "body": "Ova verzija LUME nema aplikaciju ni potvrđen mobilni instalacijski postupak za Vega OS. Promjena nastavka APK datoteke to ne rješava."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "roku",
+      "title": "Roku OS",
+      "brand": "ROKU TV · ODREĐENI HISENSE I TCL MODELI",
+      "summary": "Potreban je zaseban Roku razvoj",
+      "references": [
+        {
+          "label": "Roku — sideloading i ograničenja",
+          "href": "https://developer.roku.com/dev/docs/developer-setup"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "JOŠ NIJE PODRŽANO",
+          "description": "Trenutačna LUMA nema Roku aplikaciju. Postojanje Rokuova web instalera ne znači da ovaj HTML frontend može postati Roku aplikacija.",
+          "steps": [
+            {
+              "title": "Provjeri piše li Roku TV",
+              "body": "U Settings → System → About provjeri sustav. Hisense ili TCL marka sama po sebi ne znači VIDAA ili Android TV."
+            },
+            {
+              "title": "Nemoj zamijeniti postojeću razvojnu aplikaciju",
+              "body": "Roku dopušta jednu sideloadanu aplikaciju: nova zamjenjuje prethodnu. Za LUMU nije izrađen Roku paket, pa nemoj učitavati generički ZIP niti uključivati instalaciju radi ovog vodiča."
+            },
+            {
+              "title": "Za podršku treba Roku inačica",
+              "body": "Potrebno je izraditi zasebnu aplikaciju i potvrditi kataloge, prijavu, daljinski i reprodukciju na Roku OS-u. Ta podrška zasad nije dovršena."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tvos",
+      "title": "tvOS",
+      "brand": "APPLE TV",
+      "summary": "Nema objavljene LUMA tvOS aplikacije",
+      "references": [
+        {
+          "label": "Apple — TestFlight",
+          "href": "https://developer.apple.com/testflight/"
+        }
+      ],
+      "routes": {
+        "both": {
+          "status": "JOŠ NIJE PODRŽANO",
+          "description": "LUMA zasad nema tvOS aplikaciju u App Storeu ni TestFlightu. Android APK, LG IPK i Samsung WGT nisu paketi za Apple TV.",
+          "steps": [
+            {
+              "title": "Provjeri Apple TV model",
+              "body": "U Settings → General → About zapiši model i verziju tvOS-a."
+            },
+            {
+              "title": "Pričekaj zasebnu tvOS aplikaciju",
+              "body": "Za instalaciju na Apple TV treba odgovarajuća tvOS aplikacija i Appleov način distribucije. Trenutačno nema LUMA poveznice za instalaciju s iPhonea. AirPlay prikaz s mobitela nije samostalna TV instalacija."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "other",
+      "title": "Drugi sustavi",
+      "brand": "TITAN OS · NETCAST · DRUGI",
+      "summary": "Prvo treba utvrditi model i OS",
+      "references": [],
+      "routes": {
+        "both": {
+          "status": "POTREBNA PROVJERA SUSTAVA",
+          "description": "Naziv proizvođača nije dovoljan: ista marka može koristiti različite sustave i trgovine aplikacija.",
+          "steps": [
+            {
+              "title": "Pronađi model i sustav",
+              "body": "U TV postavkama otvori About / System Information. Zapiši puni model, naziv operacijskog sustava i verziju softvera."
+            },
+            {
+              "title": "Provjeri postoji li odgovarajući LUMA paket",
+              "body": "Za Titan OS, stare NetCast modele i druge ovdje nenavedene sustave trenutno nije izrađen paket. Otvaranje web adrese u TV pregledniku služi samo kao pregled; time se ne instalira zasebna TV aplikacija."
+            },
+            {
+              "title": "Ne mijenjaj sustav radi instalacije",
+              "body": "Za LUMU nisu potrebni tvornički reset, brisanje Stremija, root ili promjena firmwarea. Za nenavedeni model potreban je zaseban potvrđen postupak."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

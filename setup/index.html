@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0c10">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Instalacija · LUMA</title>
+  <link rel="icon" href="../assets/icon.svg">
+  <link rel="stylesheet" href="setup.css?v=1">
+  <script src="setup.js?v=1" defer></script>
+</head>
+<body>
+  <header><a class="wordmark" href="../index.html">LUMA<span>INSTALACIJA</span></a><a href="https://github.com/ivegoie/luma-tv" class="source-link">GitHub ↗</a></header>
+  <main>
+    <section class="intro">
+      <span class="eyebrow">NA VELIKOM EKRANU</span>
+      <h1>LUMA na tvom<br>televizoru<span>.</span></h1>
+      <p>Odaberi sustav televizora i prati korake na mobitelu.</p>
+      <fieldset class="phone"><legend>Tvoj mobitel</legend><label><input type="radio" name="phone" value="ios" checked><span>iPhone</span></label><label><input type="radio" name="phone" value="android"><span>Android</span></label></fieldset>
+    </section>
+    <section aria-labelledby="systems-title"><div class="section-top"><h2 id="systems-title">Koji sustav ima tvoj TV?</h2><span>01 / ODABIR</span></div><div class="systems" id="systems"></div></section>
+    <section id="guide" class="guide" hidden aria-labelledby="guide-title">
+      <div class="guide-top"><div><span class="eyebrow" id="guide-status"></span><h2 id="guide-title"></h2></div><button id="change-system" class="text-button">Promijeni TV ↑</button></div>
+      <p class="route" id="route"></p>
+      <div class="step-count"><span id="step-count"></span><div class="step-dots" id="step-dots" aria-hidden="true"></div></div>
+      <article id="step" tabindex="-1" aria-live="polite"><span class="step-number" id="step-number"></span><div><h3 id="step-title"></h3><p id="step-body"></p><div id="step-actions" class="step-actions"></div><p id="step-note" class="step-note"></p></div></article>
+      <div class="step-navigation"><button id="previous" class="secondary">← Natrag</button><button id="next" class="primary">Dalje →</button></div>
+      <details><summary>Svi koraci i izvori</summary><ol id="all-steps"></ol><div id="references" class="references"></div></details>
+    </section>
+    <section class="already"><div class="already-mark">↗</div><div><h2>LUMA je već na TV-u?</h2><p>Samo pokreni njezinu ikonu. Za uobičajene nadogradnje sučelja ne treba ponovna instalacija.</p></div></section>
+    <p class="closing-note">Ovaj vodič ne traži Stremio lozinku, PIN televizora ni pristup tvom računu. Pokretanje i reprodukcija ovise o modelu i njegovim podržanim formatima.</p>
+  </main>
+  <footer><span>LUMA · Neovisni projekt</span><span>Upute ažurirane 28. 10. 2026.</span></footer>
+  <noscript><p>Za prikaz koraka uključi JavaScript. Sažete upute dostupne su u repozitoriju LUMA.</p></noscript>
+</body>
+</html>

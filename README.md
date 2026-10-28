@@ -57,3 +57,9 @@ Pretraga 0.6.1 automatski kreće pet sekundi nakon zadnjeg znaka; početna uputa
 Automatski odabir daje niži prioritet izvorima čije audiooznake uređaj prijavljuje kao nepodržane. Zadržana je kvaliteta do 4K i ručni izbor. Oznake izvora i prijava podrške nisu jamstvo uspješne reprodukcije; LUMA ne pretvara zvuk na TV-u. Player pokreće video s uključenim zvukom i, kada je dostupan popis audiozapisa, uključi prvi samo ako nijedan već nije odabran.
 
 Izravni video/HLS trailer ima prednost kad ga metapodaci dodatka već sadrže. Za ostale ostaje YouTube. Nema novog servisa ni pretplate.
+
+## Instalacija po sustavima
+
+[Otvori mobilni vodič](https://ivegoie.github.io/luma-tv/setup/). Odaberi iPhone ili Android te sustav televizora; prikazuje se jedan korak odjednom. Vodič pokriva Google/Android TV, VIDAA, webOS, Tizen, Fire OS, Vega, Roku, tvOS i druge sustave. Status dostupnosti razlikuje pripremljen projekt, objavljen paket i potvrđenu instalaciju. Nema tvrdnje o univerzalnoj mobilnoj web instalaciji.
+
+Izvorni TV projekti nalaze se u `platforms/`. APK i IPK još nisu objavljeni niti ispitani na fizičkim Android/LG televizorima. Za VIDAA je zadržan postojeći Sidee pomoćnik. Nije uveden novi CI workflow ni pravo objave izdanja.
