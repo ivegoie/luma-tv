@@ -1,5 +1,7 @@
 # LUMA za VIDAA
 
+**Preporučeno:** [LUMA Setup za Windows i Mac](https://github.com/ivegoie/luma-tv/releases/tag/luma-setup-v0.1.0) s ugrađenim Sideeom i Pythonom. [Kratki koraci](https://ivegoie.github.io/luma-tv/setup/#vidaa). Donji postupak ostaje za razvojnu uporabu.
+
 Ovaj pomoćnik dodaje samo LUMA ikonu preko postojeće, PIN-odobrene Sidee veze. Sidee se tijekom instalacije izvršava na Windowsu ili Macu; otvaranje njegova dashboarda mobitelom još uvijek traži to računalo. Nakon registracije ikone računalo nije potrebno za pokretanje LUME s HTTPS hostinga.
 
 1. Preuzmi [Sidee](https://github.com/Empi9245/Sidee) i upari vlastiti TV PIN-om koji TV pokaže. Podrška ovisi o modelu i firmwareu.

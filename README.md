@@ -62,4 +62,10 @@ Izravni video/HLS trailer ima prednost kad ga metapodaci dodatka već sadrže. Z
 
 [Otvori mobilni vodič](https://ivegoie.github.io/luma-tv/setup/). Odaberi iPhone ili Android te sustav televizora; prikazuje se jedan korak odjednom. Vodič pokriva Google/Android TV, VIDAA, webOS, Tizen, Fire OS, Vega, Roku, tvOS i druge sustave. Status dostupnosti razlikuje pripremljen projekt, objavljen paket i potvrđenu instalaciju. Nema tvrdnje o univerzalnoj mobilnoj web instalaciji.
 
-Izvorni TV projekti nalaze se u `platforms/`. APK i IPK još nisu objavljeni niti ispitani na fizičkim Android/LG televizorima. Za VIDAA je zadržan postojeći Sidee pomoćnik. Nije uveden novi CI workflow ni pravo objave izdanja.
+Izvorni TV projekti nalaze se u `platforms/`. APK i IPK još nisu objavljeni niti ispitani na fizičkim Android/LG televizorima. Za VIDAA je zadržan postojeći Sidee pomoćnik. Izrada TV APK/IPK paketa ostaje odgođena. Za novi desktop LUMA Setup postoji zasebna izrada s pravom čitanja repozitorija.
+
+## LUMA Setup za Windows i Mac
+
+[Preuzmi LUMA Setup 0.1.0](https://github.com/ivegoie/luma-tv/releases/tag/luma-setup-v0.1.0). Za VIDAA instalaciju korisnik pokreće jedan program s ugrađenim Sideeom i Pythonom, odabire TV, unosi PIN i potvrđuje dodavanje LUMA ikone. Zasebno preuzimanje Sideea nije potrebno. Izvorni kod i licence su u `setup-desktop/`.
+
+Windows x64 i obje Mac inačice prošle su 16 testova postupka te provjere stvarnog samostalnog programa i grafičkog sučelja u svojem Windows/Mac okruženju. Novi omot još nije potvrđen na fizičkom TV-u. Probna izdanja nemaju Windows Authenticode / Apple Developer ID i notarizaciju, pa prvo otvaranje može tražiti dodatnu potvrdu sustava. Mac zahtijeva macOS 15+. Podrška VIDAA modela ovisi o firmwareu.

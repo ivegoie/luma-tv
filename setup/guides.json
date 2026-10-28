@@ -57,52 +57,65 @@
       "id": "vidaa",
       "title": "VIDAA",
       "brand": "HISENSE · ODREĐENI TOSHIBA MODELI",
-      "summary": "Ikona potvrđena na Hisense 50A6K",
+      "summary": "LUMA Setup · Windows / Mac",
       "references": [
         {
-          "label": "Sidee i podržani sustavi",
+          "label": "Preuzimanja i bilješke izdanja",
+          "href": "https://github.com/ivegoie/luma-tv/releases/tag/luma-setup-v0.1.0"
+        },
+        {
+          "label": "Sidee · ugrađena MIT jezgra",
           "href": "https://github.com/Empi9245/Sidee"
         }
       ],
       "routes": {
         "both": {
-          "status": "WEB INSTALACIJA MOBITELOM NIJE DOSTUPNA",
-          "description": "LUMA je potvrđeno dodana kao zasebna ikona na Hisense 50A6K, firmware V0000.09.09A.P0930. Sidee trenutačno traži Windows ili Mac. Njegov QR za mobitel ne uklanja potrebu za računalom tijekom instalacije.",
+          "status": "LUMA SETUP · PROBNO IZDANJE 0.1.0",
+          "description": "Jedan program s ugrađenim Sideeom za Windows i Mac. Preuzimanje uključuje Python i sve potrebne biblioteke. Ovo je instalacija pomoću računala; nakon dodavanja ikone Setup i računalo nisu potrebni za pokretanje LUME. Novi program još nije potvrđen na fizičkom TV-u.",
           "steps": [
             {
-              "title": "Ako LUMA već ima ikonu",
-              "body": "Na TV-u otvori Home → Apps → LUMA. Instalacija se ne ponavlja. Nakon ranije registracije ikona otvara objavljenu LUMU i Sidee ne mora raditi.",
-              "note": "Ovo je trenutačni način rada na korisnikovu Hisense 50A6K."
-            },
-            {
-              "title": "Za novu instalaciju provjeri model",
-              "body": "Na TV-u otvori Settings → Support → System Info. Zapiši Model i Software Version. Sideeova podrška ovisi o firmwareu; naziv VIDAA sam po sebi nije potvrda kompatibilnosti."
-            },
-            {
-              "title": "Poveži Sidee s televizorom",
-              "body": "Trenutačni provjereni postupak traži računalo: pokreni Sidee na Windowsu ili Macu, spoji ga na istu kućnu mrežu kao TV, odaberi Find TV i Request code. Unesi PIN prikazan na TV-u.",
+              "title": "Preuzmi LUMA Setup na računalo",
+              "body": "Odaberi Windows ili svoju vrstu Maca. Preuzimaš jedan program; zaseban Sidee i Python nisu potrebni. Windows izdanje je za x64, a Mac izdanja za macOS 15 ili noviji.",
               "actions": [
                 {
-                  "label": "Sidee — izvor i preuzimanje",
-                  "href": "https://github.com/Empi9245/Sidee/releases"
+                  "label": "Windows 10/11 · EXE",
+                  "href": "https://github.com/ivegoie/luma-tv/releases/download/luma-setup-v0.1.0/LUMA-Setup-Windows-x64.exe"
+                },
+                {
+                  "label": "Mac · Apple Silicon",
+                  "href": "https://github.com/ivegoie/luma-tv/releases/download/luma-setup-v0.1.0/LUMA-Setup-Mac-arm64.dmg"
+                },
+                {
+                  "label": "Mac · Intel",
+                  "href": "https://github.com/ivegoie/luma-tv/releases/download/luma-setup-v0.1.0/LUMA-Setup-Mac-x64.dmg"
                 }
-              ],
-              "note": "Obični Sidee ne prima proizvoljan LUMA URL u svojem dashboardu. Za LUMU služi zaseban pomoćnik iz repozitorija."
+              ]
             },
             {
-              "title": "Dodaj samo LUMA ikonu",
-              "body": "LUMA pomoćnik koristi postojeću, PIN-odobrenu Sidee vezu, provjerava popis aplikacija i dodaje samo ID lumatvdebug. Ne briše postojeće aplikacije. Adresa aplikacije je stalni HTTPS URL.",
+              "title": "Pokreni program",
+              "body": "Windows: pokreni preuzeti EXE. Mac: otvori DMG, povuci LUMA Setup u Applications i pokreni ga. Uključi televizor i spoji TV i računalo na istu kućnu mrežu.",
+              "note": "Probno izdanje nije potpisano certifikatom izdavača. Sustav pri prvom otvaranju može tražiti potvrdu i dopuštenje za kućnu mrežu.",
               "actions": [
                 {
-                  "label": "LUMA pomoćnik i upute",
-                  "href": "https://github.com/ivegoie/luma-tv/tree/main/platforms/vidaa"
+                  "label": "Appleove upute za prvo otvaranje",
+                  "href": "https://support.apple.com/en-us/102445"
                 }
-              ],
-              "note": "Za ovaj korak još nema web instalera koji izravno radi sa Safarija ili Chromea na mobitelu."
+              ]
             },
             {
-              "title": "Pokreni LUMU bez računala",
-              "body": "Na TV-u otvori novu LUMA ikonu i prijavi Stremio QR-om. Računalo možeš ugasiti. Reprodukcija bez laptopa traži kompatibilne izravne izvore; obični torrent ne postaje izravni video samom instalacijom aplikacije."
+              "title": "Odaberi TV i unesi PIN",
+              "body": "LUMA Setup automatski traži VIDAA televizore. Odaberi svoj TV i pritisni Prikaži PIN na TV-u. Unesi četiri znamenke s televizora i odaberi Instaliraj LUMU.",
+              "note": "Ako TV nije pronađen, unutar programa odaberi Unesi IP adresu. Adresa je u mrežnim postavkama televizora."
+            },
+            {
+              "title": "Pričekaj potvrdu instalacije",
+              "body": "Program provjerava postojeće aplikacije, sprema njihov popis i dodaje samo LUMA ikonu. Ako LUMA već ima istu adresu, ne instalira je ponovno. Na kraju provjerava da su prethodni app ID-jevi ostali prisutni.",
+              "note": "Ako TV ne potvrdi ishod, program ne ponavlja instalaciju automatski. Koristi Provjeri instalaciju ili pogledaj TV izbornik."
+            },
+            {
+              "title": "Pokreni LUMU na televizoru",
+              "body": "Odaberi Otvori LUMU na TV-u ili je pokreni kroz Home → Apps → LUMA. Prijavi Stremio skeniranjem QR-a mobitelom. Setup zatim možeš zatvoriti. Za gledanje bez laptopa koristi kompatibilne izravne izvore iz svojih dodataka.",
+              "note": "Registracija ikone preko Sideeove jezgre prethodno je potvrđena na Hisense 50A6K / V0000.09.09A.P0930. Podrška drugih modela i firmwarea razlikuje se."
             }
           ]
         }
