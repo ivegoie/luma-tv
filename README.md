@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.0**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.1**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -79,3 +79,11 @@ OK prikaže kontrole; ponovni OK na traci pauzira/nastavlja. Lijevo/desno premot
 Dug ili učestao zastoj može promijeniti automatski odabrani izvor uz zadržavanje pozicije, do tri pokušaja. Ručno odabrani izvor ima Drugi izvor. Nema pretvorbe kodeka ni jamstva da svaki izvor radi. TV preglednici koriste lakše prijelaze, a pozadinsko učitavanje kataloga čeka tijekom filma.
 
 `npm run check` provjerava sintaksu i 106 testova bez pristupa stvarnom računu ili TV-u. Na probnom videu u pregledniku potvrđeni su hrvatski titlovi, skrivanje kontrola, OK i premotavanje; konkretni TorBox izvori i fizički TV trebaju potvrdu korisnika.
+
+## Pretraga i usklađivanje titlova 0.7.1
+
+Točan naslov dolazi prvi u spojenim rezultatima, duplikati i nepovezani naslovi se izostavljaju. Postojeći dodaci za pretraživanje dijele ograničenje upita; petsekundna odgoda ostaje i tijekom sinkronizacije računa. Na javnom Cinemeta odgovoru puni upit Hardcore Henry sada daje naslov tt3072482 kao prvi podudarni rezultat.
+
+Automatski hrvatski titlovi uspoređuju dostupni hash, datoteku, izdanje i epizodu. Bolje podudaranje ima prednost pred prvim odgovorom. Ručni izbor ostaje. U Titlovi → Vrijeme titlova dodani su Ranije/Kasnije po 0,5 s i Vrati na 0. Pomak se poništava pri promjeni prijevoda ili videa.
+
+Nepotpuni podaci dodatka ograničavaju automatsko poravnanje. Vremenski pomak ne može popraviti drugo izdanje koje se sve više razilazi tijekom filma. `npm run check` sada pokriva 122 testa.

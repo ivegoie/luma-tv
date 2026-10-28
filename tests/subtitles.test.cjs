@@ -28,3 +28,34 @@ test('ASS dialogue converts to timed text without expensive styling or drawing',
   const text='[Script Info]\nTitle: Test\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:01.25,0:00:03.50,Default,,0,0,0,,{\\i1}Čekaj, Đuro!\\NJoš malo.\n';
   const cues=S.parseCues(text);assert.equal(cues[0].start,1.25);assert.equal(cues[0].end,3.5);assert.equal(cues[0].text,'Čekaj, Đuro!\nJoš malo.');
 });
+test('subtitle release matching favours the actual file over another cut or source',()=>{
+  const context={stream:{behaviorHints:{filename:'Warfare.2025.1080p.WEB-DL-FLUX.mkv'}},meta:{name:'Warfare'},videoId:'tt31434639'};
+  assert.ok(S.matchScore({movieReleaseName:'Warfare.2025.1080p.WEB-DL-FLUX'},context)>S.matchScore({movieReleaseName:'Warfare.2025.BluRay-OTHER'},context));
+  const hash={stream:{behaviorHints:{videoHash:'0123456789abcdef'}}};assert.equal(S.matchScore({videoHash:'0123456789abcdef'},hash),1200);assert.equal(S.matchScore({videoHash:'ffffffffffffffff'},hash),-1000);
+});
+test('The 100 subtitles for another episode cannot be auto selected',()=>{
+  const context={videoId:'tt2661044:3:16',stream:{behaviorHints:{filename:'The.100.S03E16.WEB-DL.mkv'}},meta:{name:'The 100'}};
+  assert.equal(S.matchScore({movieReleaseName:'The.100.S03E15.WEB-DL'},context),-1000);
+  assert.ok(S.matchScore({movieReleaseName:'The.100.S03E16.WEB-DL'},context)>0);
+});
+function externalFixture(){const list=[],events={};list.addEventListener=()=>{};list.removeEventListener=()=>{};const video={textTracks:list,currentTime:2,addEventListener:(n,f)=>events[n]=f,removeEventListener(){}};let view,text='';const controller=S.create({video,stream:{behaviorHints:{filename:'Warfare.2025.1080p.WEB-DL-FLUX.mkv'}},meta:{name:'Warfare'},videoId:'tt31434639',preferred:'hr',protocol:'https:',loadText:()=>Promise.resolve('1\n00:00:01,000 --> 00:00:04,000\nČekaj.\n'),onChange:v=>view=v,onCue:t=>text=t});return {controller,video,events,view:()=>view,text:()=>text};}
+test('a late matching release replaces a generic first response, while manual selection is retained',async()=>{
+  const f=externalFixture();f.controller.add([{lang:'hr',url:'https://test.example/generic'}],'Fast');await new Promise(r=>setImmediate(r));assert.equal(f.view().selected,'external-0');
+  f.controller.add([{lang:'hr',url:'https://test.example/exact',movieReleaseName:'Warfare.2025.1080p.WEB-DL-FLUX'}],'Later');await new Promise(r=>setImmediate(r));assert.equal(f.view().selected,'external-1');
+  f.controller.select('external-0');await new Promise(r=>setImmediate(r));f.controller.refresh();assert.equal(f.view().selected,'external-0');f.controller.destroy();
+});
+test('positive timing delays external subtitles and negative timing displays them earlier',async()=>{
+  const f=externalFixture();f.controller.add([{lang:'hr',url:'https://test.example/sub'}],'Test');await new Promise(r=>setImmediate(r));assert.equal(f.text(),'Čekaj.');
+  f.controller.setOffset(2);assert.equal(f.text(),'');assert.equal(f.view().offset,2);assert.equal(f.view().automatic,false);
+  f.video.currentTime=.75;f.controller.setOffset(-.5);assert.equal(f.text(),'Čekaj.');f.controller.setOffset(0);assert.equal(f.text(),'');f.controller.select('off');assert.equal(f.view().offset,0);f.controller.destroy();
+});
+test('a timing adjustment locks the chosen subtitle against late automatic changes',async()=>{
+  const f=externalFixture();f.controller.add([{lang:'hr',url:'https://test.example/generic'}],'Fast');await new Promise(r=>setImmediate(r));f.controller.setOffset(.5);
+  f.controller.add([{lang:'hr',url:'https://test.example/exact',movieReleaseName:'Warfare.2025.1080p.WEB-DL-FLUX'}],'Later');await new Promise(r=>setImmediate(r));assert.equal(f.view().selected,'external-0');assert.equal(f.view().offset,.5);f.controller.destroy();
+});
+test('native cue shifts use original times, reset to zero and restore on close',()=>{
+  const f=fixture(),hr=f.track('hr','Hrvatski'),cue={startTime:1,endTime:4};hr.cues=[cue];f.list.push(hr);f.controller.refresh();f.controller.setOffset(.5);assert.equal(cue.startTime,1.5);f.controller.setOffset(1);assert.equal(cue.startTime,2);assert.equal(cue.endTime,5);f.controller.setOffset(0);assert.equal(cue.startTime,1);f.controller.setOffset(-.5);f.controller.destroy();assert.equal(cue.startTime,1);assert.equal(cue.endTime,4);
+});
+test('timing updates also apply to newly loaded HLS subtitle fragments',()=>{
+  const f=fixture(),hr=f.track('hr','Hrvatski'),first={startTime:1,endTime:4};hr.cues=[first];f.list.push(hr);const hls={subtitleTracks:[{name:'Hrvatski',lang:'hr'}],subtitleTrack:-1,subtitleDisplay:false};f.controller.setHls(hls);hr.mode='showing';f.controller.setOffset(.5);assert.equal(first.startTime,1.5);const next={startTime:5,endTime:8};hr.cues.push(next);f.controller.refresh();assert.equal(next.startTime,5.5);f.controller.destroy();assert.equal(next.startTime,5);
+});
