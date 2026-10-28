@@ -16,8 +16,8 @@
   // A small cancellable scheduler prevents stale responses from starting a different title.
   function createScheduler(options){var timer=null,generation=0,active=null;
     function stop(){generation++;if(timer!==null)(options.clearTimer||clearTimeout)(timer);timer=null;if(active)active.destroy();active=null;}
-    function select(meta){stop();var run=generation;timer=(options.setTimer||setTimeout)(function(){timer=null;if(!options.allowed(meta))return;
-      options.resolve(meta).then(function(items){if(run!==generation||!options.allowed(meta))return;if(items.length)active=options.start(meta,items);else if(options.empty)options.empty(meta);},function(){if(run===generation&&options.empty)options.empty(meta);});
+    function select(meta){stop();var run=generation;timer=(options.setTimer||setTimeout)(function(){timer=null;if(!options.allowed(meta)){if(options.skipped)options.skipped(meta);return;}
+      options.resolve(meta).then(function(items){if(run!==generation)return;if(!options.allowed(meta)){if(options.skipped)options.skipped(meta);return;}if(items.length)active=options.start(meta,items);else if(options.empty)options.empty(meta);},function(){if(run===generation&&options.empty)options.empty(meta);});
     },options.delay==null?2000:options.delay);}
     return {select:select,stop:stop};
   }
@@ -32,12 +32,12 @@
     });return youtubeAPI;
   }
   function createPlayer(options){
-    var mount=options.mount,items=options.items.slice(0,3),index=-1,player=null,video=null,hls=null,timer=null,closed=false,run=0,muted=options.muted!==false,playing=false,started=false;
+    var mount=options.mount,items=options.items.slice(0,3),index=-1,player=null,video=null,hls=null,timer=null,playRetry=null,closed=false,run=0,muted=options.muted!==false,playing=false,started=false;
     function report(state,message){if(!closed)options.onState({state:state,message:message||'',muted:muted});}
-    function clear(){run++;clearTimeout(timer);if(hls){hls.destroy();hls=null;}if(player){try{player.destroy();}catch(_){}player=null;}if(video){video.pause();video.removeAttribute('src');video.load();video=null;}mount.textContent='';playing=false;started=false;}
+    function clear(){run++;clearTimeout(timer);clearTimeout(playRetry);playRetry=null;if(hls){hls.destroy();hls=null;}if(player){try{player.destroy();}catch(_){}player=null;}if(video){video.pause();video.removeAttribute('src');video.load();video=null;}mount.textContent='';playing=false;started=false;}
     function watchdog(id){clearTimeout(timer);timer=setTimeout(function(){if(!closed&&id===run)advance('Trailer se ne može pokrenuti na ovom uređaju.');},18000);}
     function blocked(){clearTimeout(timer);playing=false;report('blocked','Pritisni Pokreni trailer. TV nije dopustio automatsku reprodukciju.');}
-    function play(){if(closed||options.allowed&&!options.allowed())return;var playRun=run;if(player){try{muted?player.mute():player.unMute();player.playVideo();}catch(_){blocked();}}else if(video){video.muted=muted;var p=video.play();if(p&&p.catch)p.catch(function(e){if(closed||playRun!==run||e&&e.name==='AbortError')return;if(e&&e.name==='NotAllowedError')blocked();else advance('Format trailera nije podržan.');});}}
+    function play(){if(closed)return;var playRun=run;clearTimeout(playRetry);playRetry=null;if(options.allowed&&!options.allowed()){playRetry=setTimeout(function(){if(!closed&&playRun===run)play();},120);return;}if(player){try{muted?player.mute():player.unMute();player.playVideo();}catch(_){blocked();}}else if(video){video.muted=muted;var p=video.play();if(p&&p.catch)p.catch(function(e){if(closed||playRun!==run||e&&e.name==='AbortError')return;if(e&&e.name==='NotAllowedError')blocked();else advance('Format trailera nije podržan.');});}}
     function advance(reason){clear();if(closed)return;index++;if(index>=items.length){report('unavailable',reason||'Trailer nije dostupan za ovaj naslov.');return;}var item=items[index],id=run;if(options.onSource)options.onSource(item);report('loading','Učitavam trailer…');watchdog(id);
       if(item.kind==='youtube'){
         loadYouTube().then(function(YT){if(closed||id!==run)return;

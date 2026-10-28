@@ -160,3 +160,7 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .hero-preview-status{font-size:.8rem;color:#c4c7d0;margin:1rem 0 0}
 @media(max-width:899px),(max-height:480px){.hero.hero-youtube{display:flex;flex-direction:column;align-items:stretch}.hero-youtube>.hero-preview{position:relative;inset:auto;width:100%;order:2;margin-top:1rem}.hero-youtube>.hero-preview>.trailer-media{height:50vw;min-height:200px}.browse-screen .hero-youtube .hero-copy{width:100%;max-width:38rem}}
 @media(prefers-reduced-motion:reduce){.hero-loading{animation:none}}
+
+.hero:focus{outline:none}
+.hero:focus .hero-actions>.primary{outline:3px solid #fff;outline-offset:4px}
+.hero-with-trailer:not(.hero-youtube)>.hero-art{visibility:hidden}
