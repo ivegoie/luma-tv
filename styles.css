@@ -190,3 +190,22 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .next-episode-panel h3{margin:0;font-size:1.15rem}
 .next-episode-panel .actions{margin-top:1rem}
 @media(max-width:850px){.category-setting{align-items:flex-start;flex-wrap:wrap}.category-setting-controls{margin-left:auto}.skip-intro{bottom:14rem}.player.idle .skip-intro{bottom:3rem}}
+
+/* The timeline is the primary remote control. Progress only changes a transform. */
+.play-track{position:relative;height:1.5rem;padding:.6rem 0;background:transparent;cursor:pointer;outline-offset:4px}
+.play-track:before{content:'';position:absolute;left:0;right:0;top:.6rem;height:.3rem;background:#ffffff55}
+.play-track i{position:absolute;left:0;right:0;top:.6rem;width:100%;height:.3rem;transform:scaleX(0);transform-origin:left center}
+.play-track:focus{outline:2px solid #fff;border-radius:2px}
+.play-track.is-seeking:after{content:'';position:absolute;inset:.45rem 0;background:#ffffff12;pointer-events:none}
+.player.is-paused .play-times:before{content:'Ⅱ';position:absolute;left:50%;font-size:1rem;color:#fff}
+.player-controls [hidden],.player-captions[hidden]{display:none}
+.player-captions{position:absolute;left:8%;right:8%;bottom:17%;z-index:1;text-align:center;white-space:pre-line;font:600 1.5rem/1.35 Arial,sans-serif;color:#fff;text-shadow:0 2px 3px #000,1px 0 2px #000,-1px 0 2px #000;pointer-events:none}
+.player.idle .player-captions{bottom:6%}
+.is-playing #app{visibility:hidden}
+.is-playing #app *{animation-play-state:paused!important;transition:none!important}
+.tv-lite button,.tv-lite input,.tv-lite textarea{transition:opacity 100ms ease,background-color 100ms ease}
+.tv-lite button:not(.card):focus,.tv-lite button:not(.card):active{transform:none}
+.tv-lite .hero-loading,.tv-lite .nav button:after,.tv-lite .player-subtitles{animation:none!important}
+.tv-lite .player-top,.tv-lite .player-bottom{transition:opacity 120ms ease;transform:none!important}
+.tv-lite .card-title,.tv-lite .card-sub,.tv-lite .motion-image{transition:opacity 120ms ease}
+.tv-lite .hero-copy h1{text-shadow:none}

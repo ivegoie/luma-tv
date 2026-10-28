@@ -16,6 +16,11 @@
     var text=String(value||'').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
     if(text.length>2000000)throw new Error('Datoteka titlova je prevelika.');
     if(/^WEBVTT(?:[ \t\n]|$)/.test(text))return text;
+    if(/\[Events\]/i.test(text)){
+      var fields=null,ass=[];text.split('\n').forEach(function(line){if(/^Format:/i.test(line))fields=line.slice(7).split(',').map(function(f){return f.trim().toLowerCase();});if(!/^Dialogue:/i.test(line)||!fields)return;var parts=line.slice(9).trim().split(','),values=parts.slice(0,fields.length-1);values.push(parts.slice(fields.length-1).join(','));var start=values[fields.indexOf('start')],end=values[fields.indexOf('end')],body=values[fields.indexOf('text')];
+        if(!start||!end||!body||/\{[^}]*\\p[1-9]/.test(body))return;function stamp(t){return t.replace(/^(\d):/,'0$1:').replace(/\.(\d{2})$/,'.$10');}body=body.replace(/\{[^}]*\}/g,'').replace(/\\[Nn]/g,'\n').replace(/\\h/g,' ');ass.push(stamp(start)+' --> '+stamp(end)+'\n'+body);});
+      if(!ass.length)throw new Error('Prijevod nema čitljivih redaka.');return 'WEBVTT\n\n'+ass.join('\n\n')+'\n';
+    }
     // SRT cues: accept numeric cue IDs and comma or dot milliseconds. No HTML document conversion.
     var blocks=text.trim().split(/\n[ \t]*\n/),cues=[];
     blocks.forEach(function(block){var lines=block.split('\n');if(/^\d+$/.test(lines[0].trim()))lines.shift();
@@ -27,11 +32,17 @@
     if(!cues.length)throw new Error('Podržani su SRT i WebVTT titlovi.');
     return 'WEBVTT\n\n'+cues.join('\n\n')+'\n';
   }
+  function parseCues(value){var vtt=toVTT(value),out=[];function seconds(t){var parts=t.split(':').map(Number),n=0;parts.forEach(function(p){n=n*60+p;});return n;}
+    vtt.split(/\n[ \t]*\n/).forEach(function(block){var lines=block.split('\n'),at=lines.findIndex(function(line){return line.indexOf('-->')>=0;});if(at<0)return;var m=/^\s*((?:\d+:)?\d{2}:\d{2}\.\d{3})\s*-->\s*((?:\d+:)?\d{2}:\d{2}\.\d{3})/.exec(lines[at]);if(!m)return;var start=seconds(m[1]),end=seconds(m[2]),body=lines.slice(at+1).join('\n').replace(/<[^>]*>/g,'').replace(/&(amp|lt|gt|quot|apos|nbsp);/g,function(_,e){return {amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' '}[e];}).replace(/&#(\d{1,5});/g,function(_,n){return String.fromCharCode(Number(n));});body=body.trim();if(end>start&&body)out.push({start:start,end:end,text:body});});
+    if(!out.length)throw new Error('Prijevod nema čitljivih redaka.');out.sort(function(a,b){return a.start-b.start;});var end=0;out.forEach(function(c){end=Math.max(end,c.end);c.maxEnd=end;});return out;
+  }
+  function cueText(cues,time){var lo=0,hi=cues.length;while(lo<hi){var mid=(lo+hi)>>1;if(cues[mid].start<=time)lo=mid+1;else hi=mid;}var out=[];for(var i=lo-1;i>=0;i--){if(cues[i].maxEnd<=time)break;if(cues[i].end>time)out.unshift(cues[i].text);}return out.join('\n');}
   function create(options){
     var video=options.video,hls=null,external=[],tracks=[],requests=[],urls=[],closed=false,pending=0,failedProviders=0;
     var automatic=options.preferred!=='off',selected=null,busy=null,revision=0,error='',refreshTimer,trackTimers=[];
-    var failed=Object.create(null),known=Object.create(null),owned=[],cueTracks=[],cuePositions=new WeakMap(),controlsVisible=true;
-    function positionCues(){if(closed)return;for(var i=0;i<video.textTracks.length;i++){var track=video.textTracks[i];if(track.mode!=='showing')continue;var cues=track.activeCues||[];for(var j=0;j<cues.length;j++){var cue=cues[j];try{if(!cuePositions.has(cue))cuePositions.set(cue,{line:cue.line,snap:cue.snapToLines,align:cue.lineAlign});var original=cuePositions.get(cue);if(controlsVisible){cue.snapToLines=false;cue.line=76;cue.lineAlign='end';}else {cue.line=original.line;cue.snapToLines=original.snap;cue.lineAlign=original.align;}}catch(_){}}}}
+    var failed=Object.create(null),known=Object.create(null),owned=[],cueTracks=[],cuePositions=new WeakMap(),controlsVisible=true,controlsLine=76,lastCue='';
+    function renderExternal(){if(!options.onCue||closed)return;var text=selected&&selected.cues?cueText(selected.cues,Number(video.currentTime)||0):'';if(text!==lastCue){lastCue=text;options.onCue(text);}}
+    function positionCues(){if(closed)return;for(var i=0;i<video.textTracks.length;i++){var track=video.textTracks[i];if(track.mode!=='showing')continue;var cues=track.activeCues||[];for(var j=0;j<cues.length;j++){var cue=cues[j];try{if(!cuePositions.has(cue))cuePositions.set(cue,{line:cue.line,snap:cue.snapToLines,align:cue.lineAlign});var original=cuePositions.get(cue);if(controlsVisible){cue.snapToLines=false;cue.line=controlsLine;cue.lineAlign='end';}else {cue.line=original.line;cue.snapToLines=original.snap;cue.lineAlign=original.align;}}catch(_){}}}}
     function inventory(){var list=[];
       if(hls)(hls.subtitleTracks||[]).forEach(function(t,i){list.push({id:'hls-'+i,kind:'hls',index:i,lang:t.lang,label:t.name||t.lang||'HLS titlovi'});});
       for(var i=0;i<video.textTracks.length;i++){var t=video.textTracks[i];if(cueTracks.indexOf(t)<0&&t.addEventListener){cueTracks.push(t);t.addEventListener('cuechange',positionCues);}if(owned.indexOf(t)>=0||['subtitles','captions'].indexOf(t.kind)<0)continue;
@@ -41,7 +52,7 @@
       tracks=list.concat(external);return tracks;
     }
     function emit(){if(closed)return;options.onChange({automatic:automatic,off:!automatic&&!selected&&!busy,selected:selected&&selected.id,label:selected?selected.label:'',loading:!!busy||pending>0,error:error,failedProviders:failedProviders,choices:inventory().map(function(t){return {id:t.id,label:(isCroatian(t.lang,t.label)?'Hrvatski'+(t.label&&!/^(hr|hrv|cro|croatian|hrvatski)$/i.test(t.label)?' · '+t.label:''):t.label)+(t.provider?' · '+t.provider:''),croatian:isCroatian(t.lang,t.label),failed:!!failed[t.id]};})});}
-    function disable(){if(hls){hls.subtitleTrack=-1;hls.subtitleDisplay=false;}for(var i=0;i<video.textTracks.length;i++)video.textTracks[i].mode='disabled';}
+    function disable(){if(hls){hls.subtitleTrack=-1;hls.subtitleDisplay=false;}for(var i=0;i<video.textTracks.length;i++)video.textTracks[i].mode='disabled';if(options.onCue){lastCue='';options.onCue('');}}
     function refresh(){if(closed)return;inventory();if(!selected&&!busy)disable();else if(selected&&selected.kind!=='hls'){for(var i=0;i<video.textTracks.length;i++){if(video.textTracks[i]!==selected.track&&owned.indexOf(video.textTracks[i])<0)video.textTracks[i].mode='disabled';}}if(automatic&&!selected&&!busy){var candidate=tracks.find(function(t){return isCroatian(t.lang,t.label)&&!failed[t.id];});if(candidate){choose(candidate,false);return;}}emit();}
     function schedule(){clearTimeout(refreshTimer);refreshTimer=setTimeout(refresh,0);}
     function requestText(url,encoding){return new Promise(function(resolve,reject){var x=new XMLHttpRequest();requests.push(x);x.open('GET',url,true);x.timeout=12000;x.responseType='arraybuffer';
@@ -56,12 +67,12 @@
       }catch(e){reject(e);}};
       x.onerror=x.ontimeout=function(){reject(new Error('Titlovi se ne mogu dohvatiti. Provjeri vezu ili odaberi drugi prijevod.'));};x.onabort=function(){reject(new Error('Dohvat je prekinut.'));};x.send();
     });}
-    function load(t){if(t.track)return Promise.resolve(t.track);return (options.loadText||requestText)(t.url,t.encoding).then(function(text){if(closed)throw new Error('Player je zatvoren.');var data=toVTT(text);return new Promise(function(resolve,reject){var element=document.createElement('track'),url=URL.createObjectURL(new Blob([data],{type:'text/vtt'}));urls.push(url);element.kind='subtitles';element.label=t.label;element.srclang=isCroatian(t.lang,t.label)?'hr':t.lang||'und';element.src=url;var timer;
+    function load(t){if(t.track||t.cues)return Promise.resolve(t.track);return (options.loadText||requestText)(t.url,t.encoding).then(function(text){if(closed)throw new Error('Player je zatvoren.');if(options.onCue){t.cues=parseCues(text);return null;}var data=toVTT(text);return new Promise(function(resolve,reject){var element=document.createElement('track'),url=URL.createObjectURL(new Blob([data],{type:'text/vtt'}));urls.push(url);element.kind='subtitles';element.label=t.label;element.srclang=isCroatian(t.lang,t.label)?'hr':t.lang||'und';element.src=url;var timer;
         function finish(err){clearTimeout(timer);element.onload=element.onerror=null;if(err){element.remove();reject(err);}else {t.track=element.track;resolve(t.track);}}
         element.onload=function(){finish();};element.onerror=function(){finish(new Error('TV ne može učitati ovaj prijevod.'));};video.appendChild(element);owned.push(element.track);element.track.mode='hidden';timer=setTimeout(function(){finish(new Error('Titlovi nisu učitani na vrijeme.'));},12000);trackTimers.push(timer);
       });});}
     function choose(t,manual){if(closed)return;if(manual)automatic=false;var run=++revision;busy=t;error='';emit();
-      function commit(track){if(closed||run!==revision){if(track&&(!selected||selected.track!==track))track.mode='disabled';return;}disable();selected=t;busy=null;delete failed[t.id];if(t.kind==='hls'){hls.subtitleTrack=t.index;hls.subtitleDisplay=true;}else track.mode='showing';positionCues();emit();}
+      function commit(track){if(closed||run!==revision){if(track&&(!selected||selected.track!==track))track.mode='disabled';return;}disable();selected=t;busy=null;delete failed[t.id];error='';if(t.kind==='hls'){hls.subtitleTrack=t.index;hls.subtitleDisplay=true;}else if(track)track.mode='showing';renderExternal();positionCues();emit();}
       if(t.kind==='external')load(t).then(commit).catch(function(e){if(closed||run!==revision)return;busy=null;failed[t.id]=true;error=e.message;refresh();});
       else commit(t.track);
     }
@@ -70,7 +81,8 @@
     function select(id){if(id==='auto'){revision++;busy=null;selected=null;automatic=true;failed=Object.create(null);error='';disable();refresh();return;}if(id==='off'){revision++;automatic=false;busy=null;selected=null;error='';disable();emit();return;}var t=inventory().find(function(t){return t.id===id;});if(t)choose(t,true);}
     if(video.textTracks.addEventListener)video.textTracks.addEventListener('addtrack',schedule);
     video.addEventListener('loadedmetadata',schedule);
-    return {add:add,select:select,refresh:refresh,setControlsVisible:function(value){controlsVisible=value;positionCues();},setHls:function(value){hls=value;refresh();},providers:function(jobs){pending=jobs.length;emit();jobs.forEach(function(job){job.then(function(result){if(!closed)add(result.items,result.provider);}).catch(function(){failedProviders++;}).then(function(){if(closed)return;pending--;refresh();});});},destroy:function(){closed=true;revision++;clearTimeout(refreshTimer);trackTimers.forEach(clearTimeout);requests.forEach(function(x){x.abort();});if(video.textTracks.removeEventListener)video.textTracks.removeEventListener('addtrack',schedule);video.removeEventListener('loadedmetadata',schedule);cueTracks.forEach(function(t){t.removeEventListener('cuechange',positionCues);});urls.forEach(function(u){URL.revokeObjectURL(u);});}};
+    video.addEventListener('timeupdate',renderExternal);video.addEventListener('seeked',renderExternal);
+    return {add:add,select:select,refresh:refresh,setControlsVisible:function(value,line){controlsVisible=value;if(isFinite(line))controlsLine=line;positionCues();},setHls:function(value){hls=value;refresh();},providers:function(jobs){pending=jobs.length;emit();jobs.forEach(function(job){job.then(function(result){if(!closed)add(result.items,result.provider);}).catch(function(){failedProviders++;}).then(function(){if(closed)return;pending--;refresh();});});},destroy:function(){closed=true;revision++;if(options.onCue)options.onCue('');clearTimeout(refreshTimer);trackTimers.forEach(clearTimeout);requests.forEach(function(x){x.abort();});if(video.textTracks.removeEventListener)video.textTracks.removeEventListener('addtrack',schedule);video.removeEventListener('loadedmetadata',schedule);video.removeEventListener('timeupdate',renderExternal);video.removeEventListener('seeked',renderExternal);cueTracks.forEach(function(t){t.removeEventListener('cuechange',positionCues);});urls.forEach(function(u){URL.revokeObjectURL(u);});}};
   }
-  return {isCroatian:isCroatian,extras:extras,toVTT:toVTT,create:create};
+  return {isCroatian:isCroatian,extras:extras,toVTT:toVTT,parseCues:parseCues,cueText:cueText,create:create};
 }));

@@ -20,7 +20,7 @@ Automatski pregled dostupan je na TV rasporedu od 900 px širine, uz vidljiv pla
 
 ## Titlovi i navigacija
 
-Hrvatski titlovi automatski se biraju iz dostupnih ugrađenih/HLS traka i Stremio dodataka. SRT i WebVTT učitavaju se izravno bez lokalnog streaming servera ako izvor dopušta HTTPS/CORS pristup. Tipka **Titlovi** omogućuje ručni izbor ili isključivanje, a **Postavke → Titlovi** sprema zadani izbor. Hrvatski mora postojati i odgovarati izdanju videa; ASS/SSA i arhive nisu podržani.
+Hrvatski titlovi automatski se biraju iz dostupnih ugrađenih/HLS traka i Stremio dodataka. SRT i WebVTT učitavaju se izravno bez lokalnog streaming servera ako izvor dopušta HTTPS/CORS pristup. Tipka **Titlovi** omogućuje ručni izbor ili isključivanje, a **Postavke → Titlovi** sprema zadani izbor. Hrvatski mora postojati i odgovarati izdanju videa; Podržan je i osnovni tekst ASS/SSA prijevoda bez složenih stilova; arhive nisu podržane.
 
 Brže kretanje kroz redove daljinskim, prilagodljiviji raspored i kratke animacije koje poštuju smanjeno kretanje. Za nadogradnju zatvori i ponovno otvori LUMU; postojeća ikona i prijava ostaju.
 
@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.6.2**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.0**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -69,3 +69,13 @@ Izvorni TV projekti nalaze se u `platforms/`. APK i IPK još nisu objavljeni nit
 [Preuzmi LUMA Setup 0.1.0](https://github.com/ivegoie/luma-tv/releases/tag/luma-setup-v0.1.0). Za VIDAA instalaciju korisnik pokreće jedan program s ugrađenim Sideeom i Pythonom, odabire TV, unosi PIN i potvrđuje dodavanje LUMA ikone. Zasebno preuzimanje Sideea nije potrebno. Izvorni kod i licence su u `setup-desktop/`.
 
 Windows x64 i obje Mac inačice prošle su 16 testova postupka te provjere stvarnog samostalnog programa i grafičkog sučelja u svojem Windows/Mac okruženju. Novi omot još nije potvrđen na fizičkom TV-u. Probna izdanja nemaju Windows Authenticode / Apple Developer ID i notarizaciju, pa prvo otvaranje može tražiti dodatnu potvrdu sustava. Mac zahtijeva macOS 15+. Podrška VIDAA modela ovisi o firmwareu.
+
+## Player i TV izvedba 0.7.0
+
+Izvorni jezik i kompatibilnost imaju prednost pred rezolucijom. Jasno označene druge sinkronizacije i snimke iz kina ostaju u odjeljku Ostali izvori za ručni izbor. TV izbor daje prednost AAC-u i lakšim izdanjima. Kad su audiozapisi dostupni kroz TV API ili HLS, bira se jezik iz metapodataka i nudi izbor Zvuk; jezik koji dodatak nije naveo ne može se jamčiti.
+
+OK prikaže kontrole; ponovni OK na traci pauzira/nastavlja. Lijevo/desno premotava po 10 sekundi. Dolje vodi do opcija. Zasebni gumbi za ±10 s i pauzu su uklonjeni; kontrole se skrivaju nakon tri sekunde reprodukcije. Vanjski hrvatski SRT/VTT i osnovni ASS/SSA imaju vlastiti tekstni prikaz, uz HTTPS/CORS dostupnost prijevoda.
+
+Dug ili učestao zastoj može promijeniti automatski odabrani izvor uz zadržavanje pozicije, do tri pokušaja. Ručno odabrani izvor ima Drugi izvor. Nema pretvorbe kodeka ni jamstva da svaki izvor radi. TV preglednici koriste lakše prijelaze, a pozadinsko učitavanje kataloga čeka tijekom filma.
+
+`npm run check` provjerava sintaksu i 106 testova bez pristupa stvarnom računu ili TV-u. Na probnom videu u pregledniku potvrđeni su hrvatski titlovi, skrivanje kontrola, OK i premotavanje; konkretni TorBox izvori i fizički TV trebaju potvrdu korisnika.

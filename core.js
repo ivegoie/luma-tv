@@ -91,7 +91,7 @@
       id:m.id.slice(0,500), type:m.type.slice(0,60), name:m.name.slice(0,300),
       description:String(m.description || '').slice(0,7000), poster:safeImage(m.poster), background:safeImage(m.background),
       releaseInfo:String(m.releaseInfo || '').slice(0,80), imdbRating:String(m.imdbRating || '').slice(0,12),
-      runtime:String(m.runtime || '').slice(0,80), genres:Array.isArray(m.genres) ? m.genres.slice(0,5).map(String) : [],
+      runtime:String(m.runtime || '').slice(0,80), language:String(m.language || '').slice(0,120), originalLanguage:String(m.originalLanguage || m.original_language || '').slice(0,60), genres:Array.isArray(m.genres) ? m.genres.slice(0,5).map(String) : [],
       trailers:trailerSources(m),
       posterShape:['poster','landscape','square'].indexOf(m.posterShape)>=0?m.posterShape:'poster',
       behaviorHints:m.behaviorHints&&typeof m.behaviorHints==='object'?JSON.parse(JSON.stringify(m.behaviorHints)):{},
