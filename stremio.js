@@ -91,6 +91,7 @@
     function queue(fn){var p=serial.then(fn);serial=p.catch(function(){});return p;}
     function effective(){var items=copy(data.items);Object.keys(data.pending).forEach(function(id){items[id]=mergeItem(items[id],data.pending[id]);});return items;}
     function getViews(){return views(effective());}
+    function watched(){var items=effective(),out=[];Object.keys(items).forEach(function(id){var item=items[id];if(!validItem(item)||item.removed&&!item.temp)return;var s=item.state,at=stamp(s.lastWatched);if(!at&&!amount(s.timeWatched)&&!amount(s.overallTimeWatched)&&!amount(s.timesWatched))return;var meta=C.cleanMeta({id:item._id,type:item.type,name:item.name,poster:item.poster,posterShape:item.posterShape,behaviorHints:item.behaviorHints});if(meta)out.push({meta:meta,at:at||stamp(item._mtime)});});return out.sort(function(a,b){return b.at-a.at;}).slice(0,40);}
     function getItem(id){var edit=data.pending[id],item=data.items[id];return edit?mergeItem(item,edit):item?copy(item):null;}
     function flushInside(t){var edits=copy(data.pending),ids=Object.keys(edits);if(!ids.length)return Promise.resolve();
       var chain=Promise.resolve();for(var start=0;start<ids.length;start+=100)(function(batch){chain=chain.then(function(){return post('datastoreGet',{collection:'libraryItem',ids:batch,all:false},t);}).then(function(remote){
@@ -147,7 +148,7 @@
         if(r&&r.error){if(r.error.code===101)return null;throw err('Stremio povezivanje nije dostupno (kod '+r.error.code+').',r.error.code);}
         var v=result(r);return v&&typeof v.authKey==='string'?v.authKey:null;
       });}
-    return {status:status,connect:connect,disconnect:disconnect,sync:sync,flush:flush,views:getViews,item:getItem,addons:function(){return addonList(data.addons);},descriptors:function(){return copy(data.addons);},setBookmark:setBookmark,recordProgress:recordProgress,changeAddon:changeAddon,createLink:createLink,readLink:readLink};
+    return {status:status,connect:connect,disconnect:disconnect,sync:sync,flush:flush,views:getViews,watched:watched,item:getItem,addons:function(){return addonList(data.addons);},descriptors:function(){return copy(data.addons);},setBookmark:setBookmark,recordProgress:recordProgress,changeAddon:changeAddon,createLink:createLink,readLink:readLink};
   }
   return {createClient:createClient,mergeItem:mergeItem,views:views,addonList:addonList,unpackWatched:unpackWatched,packWatched:packWatched,episodeIds:episodeIds};
 }));

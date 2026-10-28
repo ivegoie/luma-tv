@@ -12,7 +12,7 @@ Samostalno TV web sučelje za Stremio dodatke: katalozi, pretraga, biblioteka, n
 
 Obični torrent izvori ne reproduciraju se izravno u ovoj web aplikaciji. Podrška slike, zvuka i daljinskog ovisi o TV modelu i firmwareu; pokretanje aplikacije potvrđeno je na Hisense VIDAA televizoru, dok kompatibilnost svakog izvora i titlova treba provjeriti na uređaju.
 
-## Novo u 0.4.5
+## Novo u 0.5.0
 
 Fokusirana kartica se poveća, a nakon dvije sekunde trailer kreće unutar nje sa zvukom. Prelaskom na drugu karticu prethodni trailer odmah staje i vraća se slika filma ili serije. Ako TV blokira zvuk, pritisni OK kad piše **OK za trailer sa zvukom**. Nema automatskog prelaska na mute. Banner i redovi koriste jedan zajednički scroll; automatski player je u kartici. Cinemeta već daje trailere pa dodatni addon nije potreban. **Postavke → Traileri** uključuje ili isključuje automatske preglede. Traileri ne mijenjaju povijest gledanja.
 
@@ -30,10 +30,12 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.4.5**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.5.0**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
 Postavke su na jednoj stranici, sa sažetim nazivima i svim opcijama odmah dostupnima. Normalni pregled naslova nema oznake izvora, stalne poruke o reprodukciji ni upute za daljinski.
 
-Animacije 0.4.5: povezani prijelazi kartica, redova, bannera, izbornika, Postavki i playera. GSAP 3.13.0 isporučuje se lokalno, uz obavijest o licenci. Smanjeno kretanje poštuje postavku uređaja.
+Animacije 0.5.0: povezani prijelazi kartica, redova, bannera, izbornika, Postavki i playera. GSAP 3.13.0 isporučuje se lokalno, uz obavijest o licenci. Smanjeno kretanje poštuje postavku uređaja.
+
+Početna 0.5.0 bira drugi naslov bannera pri svakom ulasku. Njegov trailer kreće nakon dvije sekunde fokusa sa zvukom. Dodani su Preporučeno za tebe, Jer si gledao…, Novo, Popularno i Žanrovi. Osobne preporuke koriste stvarno gledane naslove i njihove žanrove iz postojećih dodataka; bez povijesti počinju popularnim naslovima. Banner i kartica međusobno zaustavljaju automatske trailere.

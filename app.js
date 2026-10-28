@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var C = window.LumaCore, T = window.LumaTrailers, M = window.LumaMotion, app = document.getElementById('app'), overlay = document.getElementById('overlay');
+  var C = window.LumaCore, T = window.LumaTrailers, M = window.LumaMotion, R = window.LumaRecommendations, app = document.getElementById('app'), overlay = document.getElementById('overlay');
   var local; try { local = window.localStorage; } catch (_) { local = null; }
   var store = C.storageAdapter(local);
   var config = store.read('settings', {addons:[C.DEFAULT_ADDON],server:'',torrents:false});
@@ -14,8 +14,11 @@
   var history = store.read('history',{}); if(!history || typeof history!=='object' || Array.isArray(history))history={};
   var state = {page:'home',addons:[],rows:[],errors:[],hero:null,ready:false,generation:0,searchGeneration:0,query:'',layers:[],player:null};
   var cardTrailer=null,cardTrailerKey='',cardTrailerBlocked=false,focusedCard=null,focusedCardMeta=null;
+  var heroTrailer=null,heroTrailerKey='',heroTrailerBlocked=false;
+  var recommendations=R.create({store:store}),homeHeroes=Object.create(null),heroEntries={home:true,movie:true,series:true},discoveryRows=[],discoverySignature='',discoveryRun=0,discoveryNamespace='',discoveryPending=false,genreCache=Object.create(null);
   var trailerResolver=T.createResolver({json:json,providers:function(meta){return state.addons.filter(function(a){return C.supports(a.manifest,'meta',meta.type,meta.id);}).sort(function(a,b){return Number(b.url===meta._source)-Number(a.url===meta._source);}).map(function(a){return C.resourceURL(a.url,'meta',meta.type,meta.id);});}});
   var trailerScheduler=T.createScheduler({delay:2000,resolve:trailerResolver.resolve,allowed:trailerAllowed,start:startCardTrailer,empty:function(){}});
+  var heroTrailerScheduler=T.createScheduler({delay:2000,resolve:trailerResolver.resolve,allowed:heroTrailerAllowed,start:startHeroTrailer,empty:function(){}});
   var sample = C.cleanMeta({id:'luma:sample',type:'movie',name:'Provjera slike i zvuka',description:'Kratki test boja, pokreta i tihog zvučnog signala. Provjeri radi li player na tvom televizoru. Ovaj video dolazi uz aplikaciju i ne treba Stremio server.',runtime:'20 sekundi',genres:['Test playera'],background:new URL('assets/calibration.png',location.href).href,_sample:true},'builtin');
   var sampleStream = {name:'LUMA · probni video',description:'MP4 · H.264 Baseline / AAC · 640 × 360 · 20 sekundi',url:new URL('assets/luma-test.mp4',location.href).href};
   var requestQueue = [], inFlight = 0, toastTimer, heroTimer;
@@ -105,7 +108,7 @@
     });focus(best);smoothFocus=false;
   }
   function pushLayer(kind,title){
-    stopCardTrailer();
+    stopPreviews();
     var previous=state.layers[state.layers.length-1];if(previous)previous.node.hidden=true;
     var node=el('section','layer '+kind);node.setAttribute('role','dialog');node.setAttribute('aria-modal','true');node.setAttribute('aria-label',title);
     var top=el('div','layer-top');append(top,button('‹ Natrag',popLayer,'quiet',kind+'-back'),el('h2','',title));node.appendChild(top);
@@ -137,7 +140,7 @@
     if(meta._sample)append(art,el('span','sample-badge','Probni video'));
     if(progress&&progress.duration){var p=el('div','progress'),bar=el('i');bar.style.width=Math.min(100,progress.time/progress.duration*100)+'%';append(p,bar);append(art,p);}
     append(b,art,el('span','card-title',meta.name),el('span','card-sub',meta.releaseInfo||(meta.type==='series'?'Serija':'Film')),status);append(slot,b);
-    b.addEventListener('focus',function(){stopCardTrailer();focusedCard=b;focusedCardMeta=meta;M.layout(document.getElementById('main'),function(){slot.classList.add('is-focused');var screen=document.getElementById('main');if(screen)screen.classList.remove('is-editing');});M.scrollFocus(b,false);clearTimeout(heroTimer);heroTimer=setTimeout(function(){if(focusedCard===b)updateHero(meta);},180);if(config.autoTrailers&&!meta._sample){cardTrailerKey=C.key(meta);trailerScheduler.select(meta);}});
+    b.addEventListener('focus',function(){stopHeroTrailer();stopCardTrailer();focusedCard=b;focusedCardMeta=meta;M.layout(document.getElementById('main'),function(){slot.classList.add('is-focused');var screen=document.getElementById('main');if(screen)screen.classList.remove('is-editing');});M.scrollFocus(b,false);clearTimeout(heroTimer);if(config.autoTrailers&&!meta._sample){cardTrailerKey=C.key(meta);trailerScheduler.select(meta);}});
     slot.addEventListener('focusout',function(e){if(e.relatedTarget&&slot.contains(e.relatedTarget))return;if(focusedCard===b){stopCardTrailer();focusedCard=null;focusedCardMeta=null;clearTimeout(heroTimer);}M.layout(document.getElementById('main'),function(){slot.classList.remove('is-focused');status.hidden=true;status.textContent='';});});return slot;
   }
   function rowTitle(row){if(row.sample)return 'Upoznaj svoj player';var c=row.catalog,name=c.name||c.id,type=c.type==='movie'?'Filmovi':c.type==='series'?'Serije':c.type;
@@ -162,16 +165,18 @@
     }).catch(function(e){row.loading=false;buttonEl.disabled=false;buttonEl.textContent='Pokušaj opet';toast(e.message);});
   }
   function createHero(){
-    var h=el('section','hero');h.id='hero';append(h,el('div','hero-art'),el('div','hero-shade'),el('div','hero-copy'));return h;
+    var h=el('section','hero'),preview=el('div','hero-preview');h.id='hero';preview.hidden=true;append(h,el('div','hero-art'),preview,el('div','hero-shade'),el('div','hero-copy'));h.addEventListener('focusout',function(e){if(!e.relatedTarget||!h.contains(e.relatedTarget))stopHeroTrailer();});return h;
   }
   function updateHero(meta){
-    var hero=document.getElementById('hero');if(!hero)return;state.hero=meta;
+    stopHeroTrailer();var hero=document.getElementById('hero');if(!hero)return;state.hero=meta;
     var focused=hero.contains(document.activeElement)?document.activeElement.dataset.focus:null;
-    M.background(hero,meta.background?'url('+JSON.stringify(meta.background)+')':'');
+    M.background(hero,meta.background||meta.poster?'url('+JSON.stringify(meta.background||meta.poster)+')':'');
     var copy=hero.querySelector('.hero-copy');copy.textContent='';
     append(copy,el('h1','',meta.name),metaLine(meta),el('p','hero-description',meta.description||''));
-    var acts=el('div','actions hero-actions');append(acts,action(meta.type==='series'?'Odaberi epizodu':'Prikaži izvore','▶',function(){openDetails(meta,true);},'primary','hero-play'),action('Više informacija','ⓘ',function(){openDetails(meta);},'quiet','hero-detail'));append(copy,acts);
-    if(!meta._sample){append(acts,action('Trailer','▷',function(){openTrailer(meta);},'quiet','hero-trailer'));}
+    function activate(fn){return function(){if(heroTrailerBlocked&&heroTrailer){heroTrailer.play();return;}fn();};}
+    var acts=el('div','actions hero-actions');append(acts,action(meta.type==='series'?'Odaberi epizodu':'Prikaži izvore','▶',activate(function(){openDetails(meta,true);}), 'primary','hero-play'),action('Više informacija','ⓘ',activate(function(){openDetails(meta);}), 'quiet','hero-detail'));append(copy,acts);
+    if(!meta._sample){append(acts,action('Trailer','▷',activate(function(){openTrailer(meta);}), 'quiet','hero-trailer'));}
+    var status=el('p','hero-preview-status');status.hidden=true;status.setAttribute('role','status');append(copy,status);
     M.enter(copy,{y:8,duration:.28});
     if(focused)focus(hero.querySelector('[data-focus="'+focused+'"]'));
   }
@@ -188,6 +193,16 @@
     if(finished){handle.destroy();restorePoster();}else cardTrailer=handle;
     return {destroy:function(){handle.destroy();restorePoster();}};
   }
+  function stopHeroTrailer(){heroTrailerScheduler.stop();heroTrailer=null;heroTrailerKey='';heroTrailerBlocked=false;var hero=document.getElementById('hero');if(!hero)return;hero.classList.remove('hero-with-trailer','hero-youtube');var panel=hero.querySelector('.hero-preview'),status=hero.querySelector('.hero-preview-status');if(panel){panel.hidden=true;panel.textContent='';}if(status){status.hidden=true;status.textContent='';}}
+  function stopPreviews(){stopCardTrailer();stopHeroTrailer();}
+  function heroVisible(){var hero=document.getElementById('hero');if(!hero)return false;var panel=hero.querySelector('.hero-preview'),media=panel&&!panel.hidden&&panel.querySelector('.trailer-media'),rect=(media||hero).getBoundingClientRect(),nav=app.querySelector('.topbar'),top=nav?Math.max(0,nav.getBoundingClientRect().bottom):0;return T.visibleEnough({left:rect.left,right:rect.right,top:rect.top-top,bottom:rect.bottom-top,width:rect.width,height:rect.height},window.innerWidth,window.innerHeight-top);}
+  function heroTrailerAllowed(meta){var hero=document.getElementById('hero');return !!(config.autoTrailers&&state.ready&&!document.hidden&&!state.layers.length&&!state.player&&hero&&state.hero&&!meta._sample&&C.key(meta)===C.key(state.hero)&&hero.contains(document.activeElement)&&heroVisible());}
+  function queueHeroTrailer(){if(!state.hero||!heroTrailerAllowed(state.hero)||heroTrailerKey===C.key(state.hero))return;stopCardTrailer();heroTrailerKey=C.key(state.hero);heroTrailerScheduler.select(state.hero);}
+  function startHeroTrailer(meta,items){if(!heroTrailerAllowed(meta))return {destroy:function(){}};var hero=document.getElementById('hero'),panel=hero.querySelector('.hero-preview'),status=hero.querySelector('.hero-preview-status'),mount=el('div','trailer-media'),handle=null,finished=false;panel.hidden=false;panel.textContent='';append(panel,mount);
+    function restore(){panel.hidden=true;panel.textContent='';hero.classList.remove('hero-with-trailer','hero-youtube');}
+    handle=T.createPlayer({mount:mount,items:items,title:meta.name,muted:false,preview:true,allowed:function(){return heroTrailerAllowed(meta);},onSource:function(item){hero.classList.add('hero-with-trailer');hero.classList.toggle('hero-youtube',item.kind==='youtube');},onState:function(view){if(!hero.isConnected)return;heroTrailerBlocked=view.state==='blocked';status.textContent=heroTrailerBlocked?'OK za trailer sa zvukom':'';status.hidden=!heroTrailerBlocked;if(view.state==='unavailable'||view.state==='ended'){finished=true;restore();heroTrailerBlocked=false;if(handle){handle.destroy();heroTrailer=null;}}}});
+    if(finished){handle.destroy();restore();}else heroTrailer=handle;return {destroy:function(){handle.destroy();restore();}};
+  }
   function openTrailer(meta){var layer=pushLayer('trailer-layer','Trailer · '+meta.name),mount=el('div','trailer-media'),controls=el('div','actions'),status=el('p','trailer-status','Tražim trailer…'),handle=null,closed=false;
     var wrap=el('div','trailer-view'),play=button('Pokreni trailer',function(){if(handle)handle.toggle();},'primary','trailer-play'),sound=button('Isključi zvuk',function(){if(handle)handle.sound();},'quiet','trailer-sound');play.disabled=true;sound.disabled=true;
     append(controls,play,sound);append(wrap,mount,controls,status);append(layer.body,wrap);layer.cleanup=function(){closed=true;if(handle)handle.destroy();};layer.trailer=function(){return handle;};
@@ -200,9 +215,9 @@
     [['home','Početna'],['movie','Filmovi'],['series','Serije'],['saved','Moja lista']].forEach(function(pair){var b=button(pair[1],function(){setPage(pair[0]);},'', 'nav-'+pair[0]);if(state.page===pair[0])b.setAttribute('aria-current','page');append(nav,b);});
     append(nav,el('span','spacer'));[['search','⌕  Traži'],['settings','Postavke']].forEach(function(pair){var b=button(pair[1],function(){setPage(pair[0]);},'', 'nav-'+pair[0]);if(state.page===pair[0])b.setAttribute('aria-current','page');append(nav,b);});append(nav,button(account.status().connected?'Moj račun':'Prijavi se',openAccount,'account-nav','account-open'));append(header,nav);return header;
   }
-  function setPage(page){clearTimeout(heroTimer);state.searchGeneration++;state.page=page;var main=document.getElementById('main');if(main)main.scrollTop=0;render();focus(app.querySelector('[data-focus="nav-'+page+'"]'));}
+  function setPage(page){if(page==='home')heroEntries.home=true;clearTimeout(heroTimer);state.searchGeneration++;state.page=page;var main=document.getElementById('main');if(main)main.scrollTop=0;render();focus(app.querySelector('[data-focus="nav-'+page+'"]'));}
   function render(){
-    stopCardTrailer();clearTimeout(heroTimer);
+    stopPreviews();clearTimeout(heroTimer);
     var old=document.activeElement&&document.activeElement.dataset.focus,oldScreen=document.getElementById('main'),scrollTop=oldScreen?oldScreen.scrollTop:0,rails={};
     app.querySelectorAll('[data-rail]').forEach(function(r){rails[r.dataset.rail]=r.scrollLeft;});
     app.textContent='';append(app,renderNav());var screen=el('main','screen');screen.id='main';append(app,screen);
@@ -217,16 +232,29 @@
   function renderHome(screen){
     screen.classList.add('browse-screen');
     var rows=state.rows.filter(function(r){return state.page==='home'||r.catalog&&r.catalog.type===state.page;});
-    var first=rows.reduce(function(m,r){return m||r.items[0];},null)||sample;
-    append(screen,createHero());updateHero(first);
+    var model=discoveryModel(),first=selectHomeHero(model);
+    if(first){append(screen,createHero());updateHero(first);}else append(screen,el('section','hero hero-loading'));
     var rowsEl=el('div','rows browse-catalogs');append(screen,rowsEl);
     if(!state.ready){var wait=el('div','status-strip');append(wait,el('span','loading','Povezujem tvoje kataloge…'));append(rowsEl,wait);}
     else if(state.errors.length){var strip=el('div','status-strip');append(strip,el('span','','Neki katalozi nisu dostupni ('+state.errors.length+').'),button('Ponovi',loadCatalogs,'inline','retry-catalogs'),button('Provjeri dodatke',function(){setPage('settings');},'inline'));append(rowsEl,strip);}
     if(account.status().connected&&(account.status().error||account.status().pending)){var issue=el('div','status-strip');append(issue,el('span','',syncLabel()),button('Ponovi sinkronizaciju',syncAccount,'inline','retry-sync'));append(rowsEl,issue);}
     var progress={},continued=Object.keys(history).sort(function(a,b){return history[b].at-history[a].at;}).map(function(k){var h=history[k];if(h&&h.meta&&(h.cloud?h.time>0:C.resumePoint(h,h.duration))){if(!progress[C.key(h.meta)])progress[C.key(h.meta)]=h;return C.cleanMeta(h.meta);}return null;}).filter(Boolean).filter(function(m){return state.page==='home'||m.type===state.page;});
     continued=C.uniqueMetas(continued).slice(0,20);if(continued.length)append(rowsEl,shelf({title:'Nastavi gledati',items:continued,progress:progress},'continue'));
-    rows.forEach(function(row,i){if(row.items.length)append(rowsEl,shelf(row,'row-'+i));});
+    var discovery=el('div');discovery.id='discovery-rows';append(rowsEl,discovery);fillDiscovery(discovery,model);
+    if(state.ready)prepareDiscovery();
     if(!rows.length&&state.ready){var empty=el('div','status-strip');append(empty,el('span','','Još nema kataloga za ovaj prikaz.'),button('Dodaj dodatak',function(){setPage('settings');},'inline'));append(rowsEl,empty);}
+  }
+  function viewerScope(){var auth=account.status();return auth.connected?'account:'+auth.user.id:'guest';}
+  function watchedEntries(){if(account.status().connected)return account.watched();return Object.keys(history).map(function(k){return history[k];}).filter(function(h){return h&&h.meta&&!h.meta._sample&&h.meta.id!=='custom-direct'&&(h.time>0||h.duration>0);}).map(function(h){return {meta:h.meta,at:h.at};});}
+  function discoveryModel(){var scope=viewerScope();if(scope!==discoveryNamespace){discoveryNamespace=scope;homeHeroes=Object.create(null);heroEntries={home:true,movie:true,series:true};discoveryRows=[];discoverySignature='';genreCache=Object.create(null);}return recommendations.build(state.rows.concat(discoveryRows),watchedEntries(),state.page==='home'?null:state.page);}
+  function selectHomeHero(model){var page=state.page,pool=model.recommended.concat(model.popular,model.pool),old=homeHeroes[page];if(!state.ready&&!pool.length)return null;if(!heroEntries[page]&&old)return old;var chosen=recommendations.pickHero(pool,discoveryNamespace+':'+page);if(chosen){homeHeroes[page]=chosen;heroEntries[page]=false;var scope=discoveryNamespace;getMeta(chosen).then(function(full){if(scope!==discoveryNamespace||!homeHeroes[page]||C.key(homeHeroes[page])!==C.key(chosen))return;homeHeroes[page]=full;if(state.page===page&&!heroTrailerKey&&state.hero&&C.key(state.hero)===C.key(chosen)&&!state.layers.length)updateHero(full);}).catch(function(){});}return chosen;}
+  function fillDiscovery(host,model){host.textContent='';if(model.recommended.length)append(host,shelf({title:'Preporučeno za tebe',items:model.recommended},'recommended'));model.because.forEach(function(row){append(host,shelf(row,row.id));});if(model.fresh.length)append(host,shelf({title:'Novo',items:model.fresh},'new'));if(model.popular.length)append(host,shelf({title:'Popularno',items:model.popular},'popular'));
+    if(model.genres.length){append(host,el('h2','category-heading','Žanrovi'));model.genres.forEach(function(row){append(host,shelf(row,row.id));});}
+    state.rows.filter(function(row){return row.items.length&&!/^(top|year|popular|trending|new|latest)$/i.test(row.catalog.id);}).filter(function(row){return state.page==='home'||row.catalog.type===state.page;}).forEach(function(row,i){append(host,shelf(row,'catalog-'+i));});
+  }
+  function refreshDiscovery(){var host=document.getElementById('discovery-rows');if(!host)return;if(host.contains(document.activeElement)){discoveryPending=true;return;}discoveryPending=false;fillDiscovery(host,discoveryModel());M.reveal(host);}
+  function prepareDiscovery(){if(!state.ready)return;var scope=viewerScope(),entries=watchedEntries(),signature=state.generation+'|'+scope+'|'+entries.slice(0,8).map(function(e){return C.key(e.meta)+':'+Math.floor((Number(e.at)||0)/60000);}).join('|');if(signature===discoverySignature)return;discoverySignature=signature;var run=++discoveryRun,generation=state.generation;
+    var recent=C.uniqueMetas(entries.slice(0,8).map(function(e){return e.meta;})).slice(0,6);Promise.all(recent.map(function(meta){return getMeta(meta).then(function(full){if(full&&C.key(full)===C.key(meta))recommendations.enrich(full);}).catch(function(){});})).then(function(){if(run!==discoveryRun||generation!==state.generation||scope!==viewerScope())return null;var model=recommendations.build(state.rows,watchedEntries(),null),jobs=recommendations.genreJobs(state.addons,model);return Promise.all(jobs.map(function(job){var cached=genreCache[job.url];if(cached&&Date.now()-cached.at<600000)return Promise.resolve(cached.row);return json(job.url).then(function(data){job.items=C.uniqueMetas(data.metas,job.addon.url).slice(0,80).map(function(m){if(!m.genres.length)m.genres=[String(job.extra.genre)];return m;});genreCache[job.url]={row:job,at:Date.now()};return job;}).catch(function(){return null;});}));}).then(function(rows){if(!rows||run!==discoveryRun||generation!==state.generation||scope!==viewerScope())return;discoveryRows=rows.filter(Boolean);refreshDiscovery();});
   }
   function renderSaved(screen){if(bookmarks.length){screen.classList.add('browse-screen');append(screen,createHero());updateHero(bookmarks[0]);}var content=el('div','page-content browse-catalogs saved-catalogs');append(content,el('h1','','Moja lista'));
     if(bookmarks.length)append(content,shelf({title:bookmarks.length+' spremljenih naslova',items:bookmarks},'saved'));
@@ -234,7 +262,7 @@
     append(screen,content);
   }
   function loadCatalogs(){
-    var generation=++state.generation;state.ready=false;state.errors=[];if(state.page!=='settings')render();
+    var generation=++state.generation;discoveryRun++;discoveryRows=[];discoverySignature='';state.ready=false;state.errors=[];if(state.page!=='settings')render();
     var urls=addonURLs();activeAddonSignature=urls.join('\n');
     Promise.all(urls.map(function(url){return json(url).then(function(m){return {url:url,manifest:C.validateManifest(m)};}).catch(function(e){return {url:url,error:e.message};});})).then(function(addons){
       if(generation!==state.generation)return;state.addons=addons.filter(function(a){return !a.error;});trailerResolver.clear();state.errors=addons.filter(function(a){return a.error;});
@@ -246,7 +274,7 @@
     if(meta._sample)return Promise.resolve(meta);
     var addons=state.addons.filter(function(a){return C.supports(a.manifest,'meta',meta.type,meta.id);});
     addons.sort(function(a,b){return (a.url===meta._source?-1:0)-(b.url===meta._source?-1:0);});
-    function next(i){if(i>=addons.length)return Promise.resolve(meta);var a=addons[i];return json(C.resourceURL(a.url,'meta',meta.type,meta.id)).then(function(data){return C.cleanMeta(data.meta,a.url)||next(i+1);}).catch(function(){return next(i+1);});}return next(0);
+    function next(i){if(i>=addons.length)return Promise.resolve(meta);var a=addons[i];return json(C.resourceURL(a.url,'meta',meta.type,meta.id)).then(function(data){var full=C.cleanMeta(data.meta,a.url);if(full&&C.key(full)===C.key(meta)){recommendations.enrich(full);return full;}return next(i+1);}).catch(function(){return next(i+1);});}return next(0);
   }
   function openDetails(meta, play, resumeId){
     clearTimeout(heroTimer);var layer=pushLayer('detail','Detalji');var current=meta;
@@ -337,7 +365,7 @@
         append(l.body,button('Odustani',popLayer,'primary'),button('Odjavi se',function(){account.disconnect();popLayer();render();},'quiet','confirm-logout'));initialFocus(l.node);
       },'quiet','account-logout'));
     }else append(accountBody,button('Prijavi se',openLogin,'primary','settings-login'));
-    var trailers=section('Automatski traileri');append(trailers,switchButton('Automatski traileri',function(){return config.autoTrailers?'Uključeni':'Isključeni';},function(){config.autoTrailers=!config.autoTrailers;stopCardTrailer();},'toggle-trailers'));
+    var trailers=section('Automatski traileri');append(trailers,switchButton('Automatski traileri',function(){return config.autoTrailers?'Uključeni':'Isključeni';},function(){config.autoTrailers=!config.autoTrailers;stopPreviews();},'toggle-trailers'));
     var subtitles=section('Titlovi');append(subtitles,switchButton('Zadani titlovi',function(){return config.subtitleLanguage==='hr'?'Hrvatski':'Isključeni';},function(){config.subtitleLanguage=config.subtitleLanguage==='hr'?'off':'hr';},'subtitle-preference'));
     var addons=section('Dodaci'),addon=field('Adresa','https://…/manifest.json','','password');addon.input.dataset.focus='addon-url';append(addons,addon.node);
     append(actions(addons),button('Dodaj',function(){var url;try{url=C.manifestURL(addon.input.value);}catch(e){toast(e.message);return;}
@@ -352,7 +380,7 @@
     var serverBody=section('Server'),server=field('Adresa (neobavezno)','https://…/',config.server),serverResult=el('p','note');serverResult.setAttribute('role','status');append(serverBody,server.node);
     append(actions(serverBody),button('Spremi',function(){try{config.server=C.serverURL(server.input.value);saveSettings();toast('Spremljeno.');}catch(e){toast(e.message);}},'primary','save-server'),button('Provjeri vezu',function(){testServer(server.input.value,serverResult);},'quiet','test-server'),button('Tipkovnica',function(){inputKeyboard(server.input);},'quiet'));append(serverBody,serverResult);
     var torrentRow=el('div','setting-inline');append(torrentRow,el('span','','Torrenti preko servera · eksperimentalno'),switchButton('Torrenti preko servera',function(){return config.torrents?'Uključeni':'Isključeni';},function(){config.torrents=!config.torrents;},'toggle-torrents'));append(serverBody,torrentRow);
-    var diagnostics=section('Dijagnostika'),v=document.createElement('video'),dl=el('dl','diagnostics');[['Verzija','LUMA 0.4.5'],['Preglednik',navigator.userAgent],['Rezolucija',window.innerWidth+' × '+window.innerHeight],['Spremanje',store.available()?'Dostupno':'Samo ova sesija'],['H.264 / AAC',v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')||'Nije prijavljeno'],['HLS',v.canPlayType('application/vnd.apple.mpegurl')||'Nije prijavljeno'],['HLS.js / MSE',window.Hls&&Hls.isSupported()?'Dostupno':'Nije dostupno'],['Veza',location.protocol==='https:'?'HTTPS':'HTTP']].forEach(function(pair){append(dl,el('dt','',pair[0]),el('dd','',pair[1]));});append(diagnostics,dl,button('Test slike i zvuka',function(){openStreams(sample,sample.id);},'quiet','sample-test'));
+    var diagnostics=section('Dijagnostika'),v=document.createElement('video'),dl=el('dl','diagnostics');[['Verzija','LUMA 0.5.0'],['Preglednik',navigator.userAgent],['Rezolucija',window.innerWidth+' × '+window.innerHeight],['Spremanje',store.available()?'Dostupno':'Samo ova sesija'],['H.264 / AAC',v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"')||'Nije prijavljeno'],['HLS',v.canPlayType('application/vnd.apple.mpegurl')||'Nije prijavljeno'],['HLS.js / MSE',window.Hls&&Hls.isSupported()?'Dostupno':'Nije dostupno'],['Veza',location.protocol==='https:'?'HTTPS':'HTTP']].forEach(function(pair){append(dl,el('dt','',pair[0]),el('dd','',pair[1]));});append(diagnostics,dl,button('Test slike i zvuka',function(){openStreams(sample,sample.id);},'quiet','sample-test'));
     var direct=section('Video putem poveznice'),videoURL=field('Adresa','https://…/video.mp4','','password');append(direct,videoURL.node);append(actions(direct),button('Pokreni',function(){var stream={url:videoURL.input.value,name:'Tvoj video'},plan=C.playbackPlan(stream,config,location.protocol);if(plan.error){toast(plan.error);return;}startPlayer(C.cleanMeta({id:'custom-direct',type:'movie',name:'Tvoj video'}),'custom-direct',stream,plan);},'primary','direct-play'),button('Tipkovnica',function(){inputKeyboard(videoURL.input);},'quiet'));
     var help=section('Pomoć');append(help,button('Upute',showHelp,'quiet','help'));if(state.errors.length)append(help,textBlock('Nedostupni dodaci',state.errors.map(function(e){return (e.url?hostName(e.url)+': ':'')+e.error;}).join(' '),'message error'));
     append(content,list);append(screen,content);
@@ -445,17 +473,17 @@
     var code=e.keyCode||e.which,editing=/^(INPUT|TEXTAREA)$/.test(e.target.tagName);
     if([27,461,10009].indexOf(code)>=0||code===8&&!editing){e.preventDefault();e.stopPropagation();back();return;}
     var trailerLayer=state.layers[state.layers.length-1],trailerHandle=trailerLayer&&trailerLayer.trailer&&trailerLayer.trailer();if(trailerHandle&&[415,19,179,10252,413].indexOf(code)>=0){e.preventDefault();if(code===413)popLayer();else if(code===415)trailerHandle.play();else if(code===19)trailerHandle.pause();else trailerHandle.toggle();return;}
-    if(cardTrailer&&[415,19,179,10252,413].indexOf(code)>=0){e.preventDefault();if(code===413)stopCardTrailer();else if(code===415)cardTrailer.play();else if(code===19)cardTrailer.pause();else cardTrailer.toggle();return;}
+    var previewHandle=cardTrailer||heroTrailer;if(previewHandle&&[415,19,179,10252,413].indexOf(code)>=0){e.preventDefault();if(code===413)stopPreviews();else if(code===415)previewHandle.play();else if(code===19)previewHandle.pause();else previewHandle.toggle();return;}
     if(state.player){state.player.show();if([415,19,179,10252,413].indexOf(code)>=0){e.preventDefault();if(code===413)popLayer();else if(code===415){var promise=state.player.video.play();if(promise&&promise.catch)promise.catch(function(){toast('Pritisni Reproduciraj u playeru.');});}else if(code===19)state.player.video.pause();else state.player.toggle();return;}if(code===412||code===417){e.preventDefault();state.player.seek(code===412?-30:30);return;}}
     if([37,38,39,40].indexOf(code)>=0){if(editing&&(code===37||code===39))return;e.preventDefault();navigate({37:'left',38:'up',39:'right',40:'down'}[code]);return;}
     if(code===9){var nodes=focusable(),i=nodes.indexOf(document.activeElement);if(nodes.length){e.preventDefault();focus(nodes[(i+(e.shiftKey?-1:1)+nodes.length)%nodes.length]);}return;}
     if((code===13||code===32)&&!editing){e.preventDefault();var focused=document.activeElement;if(focused&&focused.tagName==='BUTTON')focused.click();}
   },true);
-  document.addEventListener('focusin',function(e){if(e.target.closest('.card-slot'))return;stopCardTrailer();});
-  document.addEventListener('scroll',function(){if(cardTrailerKey&&!cardPreviewVisible())stopCardTrailer();},true);
-  window.addEventListener('resize',function(){if(cardTrailerKey&&!cardPreviewVisible())stopCardTrailer();});
-  document.addEventListener('visibilitychange',function(){if(document.hidden){stopCardTrailer();var layer=state.layers[state.layers.length-1],trailer=layer&&layer.trailer&&layer.trailer();if(trailer)trailer.pause();}if(document.hidden&&state.player)state.player.video.pause();else if(!document.hidden&&account.status().connected&&!state.player)syncAccount();});
-  window.addEventListener('pagehide',stopCardTrailer);
+  document.addEventListener('focusin',function(e){if(e.target.closest('.card-slot')){stopHeroTrailer();return;}stopCardTrailer();var hero=document.getElementById('hero');if(hero&&hero.contains(e.target))queueHeroTrailer();else stopHeroTrailer();if(discoveryPending)refreshDiscovery();});
+  document.addEventListener('scroll',function(){if(cardTrailerKey&&!cardPreviewVisible())stopCardTrailer();if(heroTrailerKey&&!heroVisible())stopHeroTrailer();},true);
+  window.addEventListener('resize',function(){if(cardTrailerKey&&!cardPreviewVisible())stopCardTrailer();if(heroTrailerKey&&!heroVisible())stopHeroTrailer();});
+  document.addEventListener('visibilitychange',function(){if(document.hidden){stopPreviews();var layer=state.layers[state.layers.length-1],trailer=layer&&layer.trailer&&layer.trailer();if(trailer)trailer.pause();}if(document.hidden&&state.player)state.player.video.pause();else if(!document.hidden&&account.status().connected&&!state.player)syncAccount();});
+  window.addEventListener('pagehide',stopPreviews);
   window.addEventListener('offline',function(){toast('Mrežna veza je prekinuta. Provjeri vezu televizora.');});
   window.addEventListener('online',function(){toast('Mrežna veza je ponovno dostupna.');if(account.status().connected)syncAccount();});
   setInterval(function(){if(account.status().connected&&!document.hidden&&!state.player)syncAccount();},60000);

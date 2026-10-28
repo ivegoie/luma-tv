@@ -37,7 +37,7 @@
     function clear(){run++;clearTimeout(timer);if(hls){hls.destroy();hls=null;}if(player){try{player.destroy();}catch(_){}player=null;}if(video){video.pause();video.removeAttribute('src');video.load();video=null;}mount.textContent='';playing=false;started=false;}
     function watchdog(id){clearTimeout(timer);timer=setTimeout(function(){if(!closed&&id===run)advance('Trailer se ne može pokrenuti na ovom uređaju.');},18000);}
     function blocked(){clearTimeout(timer);playing=false;report('blocked','Pritisni Pokreni trailer. TV nije dopustio automatsku reprodukciju.');}
-    function play(){if(closed)return;var playRun=run;if(player){try{muted?player.mute():player.unMute();player.playVideo();}catch(_){blocked();}}else if(video){video.muted=muted;var p=video.play();if(p&&p.catch)p.catch(function(e){if(closed||playRun!==run||e&&e.name==='AbortError')return;if(e&&e.name==='NotAllowedError')blocked();else advance('Format trailera nije podržan.');});}}
+    function play(){if(closed||options.allowed&&!options.allowed())return;var playRun=run;if(player){try{muted?player.mute():player.unMute();player.playVideo();}catch(_){blocked();}}else if(video){video.muted=muted;var p=video.play();if(p&&p.catch)p.catch(function(e){if(closed||playRun!==run||e&&e.name==='AbortError')return;if(e&&e.name==='NotAllowedError')blocked();else advance('Format trailera nije podržan.');});}}
     function advance(reason){clear();if(closed)return;index++;if(index>=items.length){report('unavailable',reason||'Trailer nije dostupan za ovaj naslov.');return;}var item=items[index],id=run;if(options.onSource)options.onSource(item);report('loading','Učitavam trailer…');watchdog(id);
       if(item.kind==='youtube'){
         loadYouTube().then(function(YT){if(closed||id!==run)return;
