@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.1**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.2**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -87,3 +87,13 @@ Točan naslov dolazi prvi u spojenim rezultatima, duplikati i nepovezani naslovi
 Automatski hrvatski titlovi uspoređuju dostupni hash, datoteku, izdanje i epizodu. Bolje podudaranje ima prednost pred prvim odgovorom. Ručni izbor ostaje. U Titlovi → Vrijeme titlova dodani su Ranije/Kasnije po 0,5 s i Vrati na 0. Pomak se poništava pri promjeni prijevoda ili videa.
 
 Nepotpuni podaci dodatka ograničavaju automatsko poravnanje. Vremenski pomak ne može popraviti drugo izdanje koje se sve više razilazi tijekom filma. `npm run check` sada pokriva 122 testa.
+
+## Slabija veza · 0.7.2
+
+U **Postavke → Reprodukcija → Veza** odaberi **Slabija · do 1080p**. Automatski način koristi dostupne podatke preglednika o vezi/štednji podataka; na TV-u bez tih podataka način se bira ručno. Slabija veza ograničava automatski izbor na najviše 1080p (ili niže ako je tako postavljena Kvaliteta) i daje prednost manjim kompatibilnim datotekama. Ručni Ostali izvori ostaju dostupni, uključujući torrent dodatke uz postojeći server. Automatski traileri i dalje kreću nakon 2 sekunde sa zvukom.
+
+Prvi dostupan katalog prikazuje se bez čekanja svih dodataka. Dodatni redovi, žanrovi i slike učitavaju se pri približavanju vidljivom dijelu ekrana; poznate CDN slike koriste manje verzije. Memorijska predmemorija ograničena je na 4 MB / 50 odgovora i odvojena po računu. Zastarjela pretraga se otkazuje, a pristigli rezultati prikazuju se postupno, uz postojeću stanku od 5 sekundi nakon tipkanja. Za vrijeme videa katalog ne pokreće nove prijenose.
+
+HLS biblioteka učitava se tek kad je potrebna. Na slabijoj vezi HLS.js počinje najnižom varijantom, ograničava automatski odabir na 1080p i koristi ograničen međuspremnik. Izvorni TV HLS player upravlja vlastitim varijantama. Za obični MP4 nema pretvorbe kvalitete tijekom reprodukcije: dostupne manje verzije mora dati dodatak, a nepoznata rezolucija izvora ne može se pouzdano ograničiti. Veza i brzina izvora i dalje određuju zastajkivanje.
+
+Provjera: 139 testova i izolirani preglednik bez stvarnog računa. U simulaciji s 10 kataloga na početku su zatražena 2; odgođeni redovi dohvaćeni su pri navigaciji. HLS biblioteka nije preuzeta pri pregledavanju ni pri MP4 reprodukciji. Na jednom izmjerenom Cinemeta/Metahub kadru mala slika ima 28.355 B prema 446.608 B srednje slike. To nije mjerenje svih slika ni fizičkog TV-a.

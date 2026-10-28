@@ -53,7 +53,7 @@
         video.addEventListener('ended',function(){if(closed||id!==run)return;playing=false;clearTimeout(timer);report('ended','Trailer je završio.');});
         video.addEventListener('error',function(){if(!closed&&id===run)advance('Format trailera nije podržan.');});
         if(plan.hls&&!video.canPlayType('application/vnd.apple.mpegurl')){
-          if(window.Hls&&window.Hls.isSupported()){hls=new window.Hls({maxBufferLength:10,maxMaxBufferLength:20,backBufferLength:0,capLevelToPlayerSize:true});hls.on(window.Hls.Events.MEDIA_ATTACHED,function(){if(!closed&&id===run)hls.loadSource(plan.url);});hls.on(window.Hls.Events.MANIFEST_PARSED,play);hls.on(window.Hls.Events.ERROR,function(_,data){if(!closed&&id===run&&data.fatal)advance('HLS trailer nije dostupan.');});hls.attachMedia(video);}else advance('TV ne podržava ovaj HLS trailer.');
+          window.LumaPlayback.ensureHls().then(function(Hls){if(closed||id!==run)return;if(!Hls.isSupported()){advance('TV ne podržava ovaj HLS trailer.');return;}hls=new Hls(window.LumaPlayback.hlsConfig(options.slow,!!options.preview));hls.on(Hls.Events.MEDIA_ATTACHED,function(){if(!closed&&id===run)hls.loadSource(plan.url);});hls.on(Hls.Events.MANIFEST_PARSED,function(){if(closed||id!==run)return;if(options.slow&&!window.LumaPlayback.capHls(hls,1080)){advance('Trailer nema kompatibilnu kvalitetu.');return;}play();});hls.on(Hls.Events.ERROR,function(_,data){if(!closed&&id===run&&data.fatal)advance('HLS trailer nije dostupan.');});hls.attachMedia(video);}).catch(function(){if(!closed&&id===run)advance('HLS trailer nije dostupan.');});
         }else {video.src=plan.url;play();}
       }
     }

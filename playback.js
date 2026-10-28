@@ -2,6 +2,12 @@
 (function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.LumaPlayback=factory();}(typeof window!=='undefined'?window:this,function(){
   'use strict';
   function isTV(agent){return /VIDAA|Hisense|Smart[ -]?TV|HbbTV|Tizen|Web0S|WebOS|NetCast|Android.*(?:TV|AFT)|BRAVIA|Viera|Opera TV|TV Store/i.test(String(agent||''));}
+  var hlsLoads=new WeakMap();
+  function ensureHls(options){options=options||{};var env=options.environment||(typeof window!=='undefined'?window:null);if(!env||!env.document)return Promise.reject(new Error('HLS preglednik nije dostupan.'));if(env.Hls)return Promise.resolve(env.Hls);if(hlsLoads.has(env))return hlsLoads.get(env);
+    var promise=new Promise(function(resolve,reject){var script=env.document.createElement('script'),timer,done=false;function finish(error){if(done)return;done=true;clearTimeout(timer);script.onload=script.onerror=null;if(error){hlsLoads.delete(env);script.remove();reject(error);}else resolve(env.Hls);}script.src='vendor/hls-1.7.3.min.js';script.onload=function(){finish(env.Hls?null:new Error('HLS player nije učitan.'));};script.onerror=function(){finish(new Error('HLS player nije dostupan.'));};timer=setTimeout(function(){finish(new Error('Isteklo je učitavanje HLS playera.'));},options.timeout||30000);env.document.head.appendChild(script);});hlsLoads.set(env,promise);return promise;
+  }
+  function hlsConfig(slow,preview){var result={maxBufferLength:preview?10:slow?30:20,maxMaxBufferLength:preview?20:45,maxBufferSize:preview?10000000:24000000,backBufferLength:preview?0:5,capLevelToPlayerSize:true,enableWorker:true};if(slow){result.startLevel=0;result.abrEwmaDefaultEstimate=600000;}return result;}
+  function capHls(hls,quality){var levels=hls.levels||[],cap=-1;for(var i=0;i<levels.length;i++){if(Number(levels[i].height)>quality)break;cap=i;}if(levels.length&&cap<0)return false;if(cap>=0)hls.autoLevelCapping=cap;return true;}
   function controls(options){
     var visible=true,closed=false,timer=null,set=options.setTimeout||setTimeout,clear=options.clearTimeout||clearTimeout;
     function hide(){if(closed)return;clear(timer);timer=null;visible=false;options.visibility(false);}
@@ -22,16 +28,16 @@
     return {by:function(amount){return to((target==null?Number(options.video.currentTime)||0:target)+amount);},to:to,commit:commit,pending:function(){return target;},destroy:function(){closed=true;clear(timer);target=null;}};
   }
   function watchdog(options){
-    var now=options.now||Date.now,lastAt=now(),lastTime=0,started=false,active=true,failed=false,waitingAt=null,episodes=[],buffering=false;
+    var now=options.now||Date.now,lastAt=now(),lastTime=0,started=false,progressed=false,active=true,failed=false,waitingAt=null,episodes=[],buffering=false;
     function show(value){if(value===buffering)return;buffering=value;if(options.buffering)options.buffering(value);}
     function reset(){lastAt=now();lastTime=Number(options.video.currentTime)||0;waitingAt=null;show(false);}
     return {playing:function(){started=true;active=true;},pause:function(){active=false;waitingAt=null;show(false);},resume:function(){active=true;reset();},seek:reset,
       tick:function(){if(failed||!active||options.video.ended)return;var stamp=now(),time=Number(options.video.currentTime)||0;
-        if(time>lastTime+.04){if(waitingAt!=null){episodes.push({at:stamp,ms:stamp-waitingAt});waitingAt=null;}lastAt=stamp;lastTime=time;show(false);}
+        if(time>lastTime+.04){progressed=true;if(waitingAt!=null){episodes.push({at:stamp,ms:stamp-waitingAt});waitingAt=null;}lastAt=stamp;lastTime=time;show(false);}
         else {if(time<lastTime-.5)reset();if(started&&options.video.paused)return;if(waitingAt==null)waitingAt=stamp;show(stamp-lastAt>900);}
-        episodes=episodes.filter(function(e){return stamp-e.at<60000;});var stalled=stamp-lastAt>=(options.timeout||20000),repeated=episodes.length>=3&&episodes.reduce(function(n,e){return n+e.ms;},0)>=12000;
+        episodes=episodes.filter(function(e){return stamp-e.at<60000;});var stalled=stamp-lastAt>=(progressed?(options.timeout||20000):(options.startupTimeout||options.timeout||20000)),repeated=episodes.length>=3&&episodes.reduce(function(n,e){return n+e.ms;},0)>=(options.repeatThreshold||12000);
         if(stalled||repeated){failed=true;show(false);options.fail(repeated?'repeated-buffering':'stalled');}
       },destroy:function(){active=false;failed=true;show(false);}};
   }
-  return {isTV:isTV,controls:controls,seeker:seeker,watchdog:watchdog,clampSeek:clampSeek};
+  return {isTV:isTV,ensureHls:ensureHls,hlsConfig:hlsConfig,capHls:capHls,controls:controls,seeker:seeker,watchdog:watchdog,clampSeek:clampSeek};
 }));

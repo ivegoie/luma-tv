@@ -64,3 +64,8 @@ test('track selection chooses original audio and preserves an explicitly chosen 
   assert.equal(E.selectAudio(tracks,{language:'Russian'},'original'),0);
   assert.equal(E.selectAudio(tracks,{},'original'),0);
 });
+test('weak connection ranking prefers a smaller compatible source over a huge 1080p release',()=>{const large=entry('1080p AAC 12 GB',0),small=entry('1080p AAC 1.5 GB',1);assert.equal(E.rank([large,small],{lowData:true,maxQuality:1080,meta:{runtime:'120 min'},canPlay:aacOnly})[0],small);assert.equal(E.rank([large,small],{maxQuality:1080,canPlay:aacOnly})[0],large);});
+test('weak mode still favours playable original audio and keeps torrent sources available',()=>{const dubbed=entry('1080p AAC RUS 100 MB',0),original=entry('720p AAC ENG 1 GB',1),torrent=entry('720p AAC ENG 500 MB',2);torrent.plan.kind='torrent';const result=E.rank([dubbed,original,torrent],{lowData:true,meta:{originalLanguage:'en',runtime:'90 min'},canPlay:aacOnly});assert.equal(result[0],original);assert.ok(result.includes(torrent));});
+test('bitrate estimates only use reported runtime and sizes',()=>{assert.equal(E.runtimeSeconds({runtime:'1h 45m'}),6300);assert.equal(E.runtimeSeconds({runtime:'120 min'}),7200);assert.equal(E.runtimeSeconds({runtime:'unknown'}),0);assert.ok(E.networkCost({name:'1080p 10 GB'},{lowData:true,meta:{runtime:'120 min'}})>E.networkCost({name:'1080p 1 GB'},{lowData:true,meta:{runtime:'120 min'}}));});
+
+test('bandwidth savings never outrank known audio incompatibility',()=>{const silent=entry('720p DTS-HD 100 MB',0),audible=entry('1080p AAC 80 GB',1);assert.equal(E.rank([silent,audible],{lowData:true,downlink:1,meta:{runtime:'90 min'},canPlay:aacOnly})[0],audible);});
