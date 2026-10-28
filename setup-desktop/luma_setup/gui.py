@@ -35,6 +35,9 @@ class Window:
         root.protocol("WM_DELETE_WINDOW", self.close)
         style = ttk.Style(root);style.theme_use("clam")
         style.configure("TProgressbar", troughcolor=PANEL, background=RED, bordercolor=PANEL, lightcolor=RED, darkcolor=RED)
+        for name,bg in (("Primary.Luma.TButton",RED),("Quiet.Luma.TButton",PANEL)):
+            style.configure(name,background=bg,foreground=FG,borderwidth=0,padding=(18,11),font=("Helvetica",12,"bold" if bg==RED else "normal"),focuscolor=FG)
+            style.map(name,background=[("disabled","#292d38"),("active","#d93843" if bg==RED else "#343947")],foreground=[("disabled","#747986")])
         style.configure("Luma.TCombobox", fieldbackground=PANEL, background=PANEL, foreground=FG, arrowcolor=FG, padding=8)
         style.map("Luma.TCombobox", fieldbackground=[("readonly",PANEL)], foreground=[("readonly",FG)], selectbackground=[("readonly",PANEL)])
         header=tk.Frame(root,bg=BG,padx=32,pady=24);header.pack(fill="x")
@@ -60,7 +63,7 @@ class Window:
         n=tk.Label(parent,text=text,bg=BG,fg=color,font=("Helvetica",size,"bold" if bold else "normal"),anchor="w",justify="left",wraplength=490);n.pack(anchor="w",fill="x",pady=(0,12));return n
 
     def button(self,parent,title,command,quiet=False):
-        return tk.Button(parent,text=title,command=command,bg=PANEL if quiet else RED,fg=FG,activebackground="#343947" if quiet else "#d93843",activeforeground=FG,font=("Helvetica",12,"normal" if quiet else "bold"),relief="flat",borderwidth=0,highlightthickness=0,cursor="hand2",padx=18,pady=11,disabledforeground="#747986")
+        return ttk.Button(parent,text=title,command=command,style="Quiet.Luma.TButton" if quiet else "Primary.Luma.TButton",cursor="hand2")
 
     def clear(self,step):
         self.step=step

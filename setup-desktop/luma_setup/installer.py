@@ -207,5 +207,5 @@ def self_test():
     if b"-----END CERTIFICATE-----" not in decoded or b"PRIVATE KEY-----" not in decoded:
         raise RuntimeError("Ugrađeni certifikat nije ispravan.")
     del decoded
-    print("LUMA Setup: Python, Tk, MQTT, certifikat i licence su ugrađeni. TV nije kontaktiran.")
+    print("LUMA Setup: bundled Python/Tk, MQTT, certificate and licenses OK. No TV contacted.")
     return 0

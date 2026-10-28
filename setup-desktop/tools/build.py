@@ -26,7 +26,7 @@ def build():
         version='.'.join(str(v) for v in sys.version_info[:3])
         with urllib.request.urlopen('https://raw.githubusercontent.com/python/cpython/v'+version+'/LICENSE',timeout=30) as response:
             python_license.write_bytes(response.read())
-    for dependency,label in [('pyinstaller','PYINSTALLER'),('paho-mqtt','PAHO')]:
+    for dependency,label in [('pyinstaller','PYINSTALLER')]:
         distribution=importlib.metadata.distribution(dependency)
         for file in distribution.files:
             if file.name in ('COPYING.txt','LICENSE.txt') and ('.dist-info/' in str(file)):

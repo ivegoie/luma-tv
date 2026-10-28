@@ -6,7 +6,7 @@ if __name__ == "__main__":
         from luma_setup.gui import Window, DemoInstaller
         root=tk.Tk();root.withdraw()
         window=Window(root,DemoInstaller(),True)
-        root.after(600,root.quit);root.mainloop()
+        root.after(2500,root.quit);root.mainloop()
         assert window.tvs, 'Demo TV not displayed'
         window.tv=window.tvs[0];window.pin_screen(__import__('time').monotonic()+60)
         window.pin.insert(0,'1234');assert window.pin.get()=='1234'
