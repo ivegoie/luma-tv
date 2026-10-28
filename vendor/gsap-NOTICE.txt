@@ -1,0 +1,10 @@
+GSAP 3.13.0
+Copyright 2008-2025 GreenSock, Inc. All rights reserved.
+
+This unmodified browser distribution was obtained from the official npm package:
+https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js
+
+License information and terms:
+https://gsap.com/standard-license/
+
+The copyright and license notice in gsap-3.13.0.min.js is retained.
