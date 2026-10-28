@@ -170,3 +170,6 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .hero.hero-trailer-full>.hero-copy[hidden]{display:none}
 .hero-copy[aria-hidden=true]{pointer-events:none}
 .hero.hero-trailer-full>.hero-shade{display:none}
+
+.card-title,.card-sub{transition:opacity 200ms ease,transform 220ms var(--motion-ease)}
+.card-slot.is-trailer-playing .card-title,.card-slot.is-trailer-playing .card-sub{opacity:0;transform:translateY(-.25rem);pointer-events:none}
