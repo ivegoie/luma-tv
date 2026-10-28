@@ -97,3 +97,26 @@ button{transition:transform 140ms ease-out,background-color 140ms ease-out,color
   .search-screen:not(.is-editing) .search-editor{display:block}
   .search-screen:not(.is-editing) .search-edit{display:none}
 }
+
+/* Settings stay on one page: a label, its value, and the relevant controls. */
+.hero-description:empty,.trailer-status:empty,.settings-fields>.note:empty{display:none}
+.settings-page{max-width:78rem;margin:0 auto}
+.settings-page>h1{font-size:2.4rem;margin-bottom:1.5rem}
+.settings-list{max-width:65rem}
+.settings-list .settings-section{display:grid;grid-template-columns:12rem minmax(0,1fr);gap:2rem;padding:1.5rem 0;margin:0;border-bottom:1px solid #292c36}
+.settings-list .settings-section>h2{font-size:1.05rem;line-height:1.5;margin:.6rem 0 0;color:#d4d6df}
+.settings-fields{min-width:0}
+.settings-fields .field{margin:0 0 .8rem}
+.settings-fields .field>span{font-size:.82rem;font-weight:400;color:#aeb3c2}
+.settings-fields .field input{padding:.8rem 1rem}
+.settings-fields .actions{margin:.5rem 0 0;gap:.6rem}
+.settings-fields .account-email{font-size:1.05rem;margin:.4rem 0 .7rem}
+.settings-fields .note{margin:.7rem 0}
+.settings-fields .addon-item{padding:.8rem 0}
+.settings-fields .addon-item:last-child{border:0}
+.settings-fields .toggle{min-width:9rem}
+.setting-inline{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1rem;padding-top:1rem;border-top:1px solid #292c36;font-size:.85rem}
+.settings-fields .diagnostics{display:grid;grid-template-columns:9rem minmax(0,1fr);gap:.7rem 1rem;margin:.5rem 0 1.2rem;font-size:.8rem;line-height:1.5}
+.settings-fields .diagnostics dt{margin:0;color:#9298a8}
+.settings-fields .diagnostics dd{margin:0;overflow-wrap:anywhere;color:#d5d8e1}
+@media(max-width:850px){.settings-list .settings-section{grid-template-columns:minmax(0,1fr);gap:.8rem;padding:1.4rem 0}.settings-list .settings-section>h2{margin:0}.setting-inline{flex-wrap:wrap}.settings-fields .diagnostics{grid-template-columns:7.5rem minmax(0,1fr)}}
