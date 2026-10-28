@@ -1,0 +1,14 @@
+{
+  "name": "Sidee",
+  "repository": "https://github.com/Empi9245/Sidee",
+  "revision": "36095890dbf27e3daf1cf9c461bc62f8e7cad175",
+  "license": "MIT",
+  "files": {
+    "platform_support.py": "35a2cc165f58a709b3917f6da9a8459b70bfd3c7d420d804f7bf95c99c5a772e",
+    "protocol.py": "fe5ebcf173e91388baca59555bb1b316c91c1e7c26a2e0542ab8d4e96babdc95",
+    "client.py": "0b3aea5b67053df03d035ac714c782496fbab3dc0a42f25a71edb301fb3b87ff",
+    "__init__.py": "508915531144604e7c4f4e49826733e67f1b4a9bd6abc7927b716ac4b498f257",
+    "tv-client.bundle": "955e90447fd7da7680ddcbbf1cc72807f7eaa065f14ff59d057d76811dad6d5c",
+    "pairing.py": "8c8887878049125b9273a2eb87911da222a23c937f073c72d21a67760a181ace"
+  }
+}
