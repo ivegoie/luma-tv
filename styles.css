@@ -152,7 +152,6 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .hero>.hero-preview[hidden],.hero-preview-status[hidden]{display:none}
 .hero-preview>.trailer-media{height:100%;padding:0}
 .hero-preview video{object-fit:cover}
-.hero-with-trailer .hero-description{display:none}
 .hero-youtube>.hero-preview{left:36%}
 .hero-youtube>.hero-art,.hero-youtube>.hero-shade{display:none}
 .browse-screen .hero-youtube .hero-copy{width:31%;max-width:none}
@@ -164,3 +163,10 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .hero:focus{outline:none}
 .hero:focus .hero-actions>.primary{outline:3px solid #fff;outline-offset:4px}
 .hero-with-trailer:not(.hero-youtube)>.hero-art{visibility:hidden}
+
+/* Information exits before the unobscured player takes the full banner. */
+.hero.hero-trailer-full>.hero-preview{position:absolute;inset:0;width:100%;height:100%;margin:0;order:0}
+.hero.hero-trailer-full>.hero-preview>.trailer-media{height:100%;padding:0}
+.hero.hero-trailer-full>.hero-copy[hidden]{display:none}
+.hero-copy[aria-hidden=true]{pointer-events:none}
+.hero.hero-trailer-full>.hero-shade{display:none}

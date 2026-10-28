@@ -50,5 +50,11 @@
     var next=art.cloneNode(false);next.classList.add('hero-art-next');next.style.backgroundImage=value;hero.insertBefore(next,hero.querySelector('.hero-shade'));hero._lumaArtSwap={art:art,next:next};
     g.fromTo(next,{opacity:0},{opacity:.95,duration:.42,ease:'power1.inOut',onComplete:function(){art.remove();next.classList.remove('hero-art-next');g.set(next,{clearProps:'opacity'});hero._lumaArtSwap=null;}});
   }
-  root.LumaMotion={enter:enter,leave:leave,layout:layout,settleLayout:settleLayout,scrollFocus:scrollFocus,page:page,reveal:reveal,items:items,background:background,reduced:reduced};
+  function heroPlayback(hero,playing){var copy=hero&&hero.querySelector('.hero-copy'),panel=hero&&hero.querySelector('.hero-preview');if(!copy||!panel)return;var shade=hero.querySelector('.hero-shade'),active=!!hero._lumaPlayback;if(playing===active&&(playing||!copy.hidden&&!hero.classList.contains('hero-trailer-full')))return;
+    hero._lumaPlayback=playing;var run=hero._lumaPlaybackRun=(hero._lumaPlaybackRun||0)+1;if(g){g.killTweensOf(copy);g.killTweensOf(panel);if(shade)g.killTweensOf(shade);g.set(panel,{clearProps:'opacity,transform,willChange'});}
+    if(!playing){hero.classList.remove('hero-trailer-full');copy.hidden=false;copy.removeAttribute('aria-hidden');if(g){g.set(copy,{clearProps:'opacity,transform,willChange'});if(shade)g.set(shade,{clearProps:'opacity'});}if(active)enter(copy,{y:8,duration:.26});return;}
+    copy.setAttribute('aria-hidden','true');function expand(){if(run!==hero._lumaPlaybackRun||!hero.isConnected||!hero._lumaPlayback)return;copy.hidden=true;hero.classList.add('hero-trailer-full');if(!reduced())g.fromTo(panel,{opacity:.7},{opacity:1,duration:.28,ease:'power1.out',overwrite:'auto',clearProps:'opacity'});}
+    if(reduced()){expand();return;}if(shade)g.to(shade,{opacity:0,duration:.24,ease:'power2.in',overwrite:'auto'});g.set(copy,{willChange:'transform,opacity'});g.to(copy,{opacity:0,y:-12,duration:.24,ease:'power2.in',overwrite:'auto',onComplete:expand});
+  }
+  root.LumaMotion={enter:enter,leave:leave,layout:layout,settleLayout:settleLayout,scrollFocus:scrollFocus,page:page,reveal:reveal,items:items,background:background,heroPlayback:heroPlayback,reduced:reduced};
 }(window));
