@@ -12,9 +12,9 @@ Samostalno TV web sučelje za Stremio dodatke: katalozi, pretraga, biblioteka, n
 
 Obični torrent izvori ne reproduciraju se izravno u ovoj web aplikaciji. Podrška slike, zvuka i daljinskog ovisi o TV modelu i firmwareu; pokretanje aplikacije potvrđeno je na Hisense VIDAA televizoru, dok kompatibilnost svakog izvora i titlova treba provjeriti na uređaju.
 
-## Novo u 0.4.2
+## Novo u 0.4.3
 
-Zadrži fokus na naslovu oko dvije sekunde za trailer sa zvukom u velikom banneru. Ako TV blokira pokretanje, pritisni OK kad se pojavi „OK za trailer sa zvukom”. Nema automatskog prelaska na mute. Banner i redovi pomiču se zajedno u jednom scrollu; trailer i zvuk staju kad banner ode izvan ekrana. Plutajući pregled je uklonjen; izravni video koristi pozadinu bannera, a YouTube se prikazuje uz naslov bez prekrivanja playera. Podaci dolaze iz postojećih dodataka (Cinemeta već nudi trailere), pa nije potrebna dodatna instalacija addona. Tipka **Trailer** otvara zaseban pregled sa zvukom. **Postavke → Traileri** trajno uključuje ili isključuje automatske preglede. Traileri ne mijenjaju povijest gledanja.
+Fokusirana kartica se poveća, a nakon dvije sekunde trailer kreće unutar nje sa zvukom. Prelaskom na drugu karticu prethodni trailer odmah staje i vraća se slika filma ili serije. Ako TV blokira zvuk, pritisni OK kad piše **OK za trailer sa zvukom**. Nema automatskog prelaska na mute. Banner i redovi koriste jedan zajednički scroll; automatski player je u kartici. Cinemeta već daje trailere pa dodatni addon nije potreban. **Postavke → Traileri** uključuje ili isključuje automatske preglede. Traileri ne mijenjaju povijest gledanja.
 
 Automatski pregled dostupan je na TV rasporedu od 900 px širine, uz vidljiv player; na uskom prikazu koristi tipku Trailer. YouTube ili TV mogu ograničiti ugrađivanje i autoplay: ako reprodukcija ne uspije, ostaje slika naslova. Stvarni YouTube trailer potvrđen je u desktop pregledniku; fizički VIDAA prikaz još treba potvrditi. Koristi službeni YouTube iframe ili kompatibilan izravni video, bez lokalnog streaming servera.
 
@@ -30,6 +30,6 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.4.2**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.4.3**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
