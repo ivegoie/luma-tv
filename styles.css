@@ -51,21 +51,58 @@ button{transition:transform 140ms ease-out,background-color 140ms ease-out,color
 @media(max-width:480px){.hero-copy h1{font-size:2.5rem}.hero{min-height:32rem}.player-subtitles{grid-template-columns:minmax(0,1fr);bottom:11rem}.player-top h2{font-size:1rem}.player-top button{padding:.6rem}.layer-body{padding-top:1.4rem}.login-copy h1{font-size:2.7rem}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.card:focus{transform:none}}
 
-/* Keep trailer players unobscured; copy and controls sit outside the video. */
-.hero{min-height:29rem}
-.hero-copy{width:43%}
-.hero-preview{position:absolute;top:5.8rem;right:var(--edge);width:40vw;z-index:3}
-.hero-preview[hidden]{display:none}
+/* One cinematic stage belongs to the catalog. It never floats over a card. */
+.browse-screen{display:flex;flex-direction:column;padding:5.1rem 0 0;overflow:hidden;scroll-padding:0}
+.browse-screen .hero{flex:0 0 55vh;height:55vh;min-height:0;padding:1.4rem var(--edge);background:#0b0c10}
+.browse-screen .hero-copy{width:43%;max-width:37rem}
+.browse-screen .hero-copy h1{font-size:2.8rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.browse-screen .hero-description{-webkit-line-clamp:2}
+.browse-catalogs{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;scroll-padding:1rem 0;padding:1.1rem 0 2rem;margin:0}
+.browse-catalogs::-webkit-scrollbar{display:none}
+.browse-screen .shelf{margin-bottom:1.2rem}
+.browse-screen .page-content{padding:1rem var(--edge) 2rem}
+.saved-catalogs>h1{font-size:1.4rem;margin-bottom:.5rem}
+.saved-catalogs>p{font-size:.85rem}
+.hero-preview{position:absolute;inset:0;z-index:0}
+.hero-preview[hidden],.hero-trailer-controls[hidden]{display:none}
 .trailer-media{position:relative;width:100%;height:0;padding-bottom:56.25%;min-height:200px;background:#000}
 .trailer-media iframe,.trailer-media video{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:contain}
-.trailer-preview-controls{display:flex;gap:.4rem;justify-content:flex-end;padding:.65rem 0;background:#0b0c10}
-.trailer-preview-controls button{font-size:.78rem;padding:.55rem .7rem;min-height:2.3rem}
-.trailer-status{font-size:.8rem;line-height:1.5;color:#c4c7d0;min-height:2.4em;margin:.8rem 0 0}
-.hero-preview.is-docked{position:fixed;top:6rem;width:40vw;box-shadow:0 .7rem 2rem #0008}
+.hero-preview .trailer-media{height:100%;padding:0}
+.hero-preview video{object-fit:cover;opacity:0;transition:opacity 400ms ease-out}
+.has-trailer .hero-preview video{opacity:1}
+.hero-art{transition:opacity 400ms ease-out}
+.has-trailer .hero-art{opacity:0}
+.hero-shade{pointer-events:none}
+/* YouTube must remain fully visible. Its title/actions live beside its bounds. */
+.trailer-youtube .hero-preview{left:36%}
+.trailer-youtube .hero-art,.trailer-youtube .hero-shade{display:none}
+.browse-screen .trailer-youtube .hero-copy{width:31%;max-width:none}
+.trailer-youtube .hero-copy h1{font-size:2.5rem}
+.has-trailer .hero-description,.has-trailer .hero-eyebrow{display:none}
+.hero-trailer-controls{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.hero-trailer-controls button{font-size:.78rem;padding:.5rem .65rem;min-height:2.2rem}
+.hero-actions{gap:.55rem;margin-top:1rem}
+.hero-actions button{font-size:.9rem;padding:.65rem .9rem}
+.trailer-status{font-size:.8rem;line-height:1.5;color:#c4c7d0;min-height:1.5em;margin:.8rem 0 0}
+.hero .trailer-status{max-width:28rem}
 .trailer-view{width:82vw;max-width:100rem;margin:0 auto}
 .trailer-view .trailer-media{padding-bottom:0;height:65vh;min-height:200px}
 .trailer-layer .layer-body{padding-top:1rem}
-@media(max-width:1100px){.hero-copy h1{font-size:2.8rem}.hero-preview{width:40vw}.trailer-preview-controls{flex-wrap:wrap}}
-@media(max-width:850px){.hero{display:block;min-height:32rem}.hero-copy{width:100%;max-width:38rem}.hero-preview{position:relative;top:auto;right:auto;width:100%;margin:1.5rem 0 0}.trailer-view{width:100%}.trailer-view .trailer-media{height:48vh}.trailer-preview-controls button{font-size:.8rem}}
-
-.hero-preview.is-docked.is-left{left:var(--edge);right:auto}
+.search-screen.is-editing .hero,.search-screen.is-editing .search-edit{display:none}
+.search-screen.is-editing .page-content{padding-top:1.5rem}
+.search-screen:not(.is-editing) .search-editor,.search-screen:not(.is-editing) .page-content>h1{display:none}
+.search-screen:not(.is-editing) .search-layout{display:block;margin-top:1rem}
+.search-screen:not(.is-editing) .search-results .card{flex-basis:17.5rem}
+.search-screen:not(.is-editing) .search-results .card-art{height:9.85rem}
+@media(max-width:899px),(max-height:480px){
+  .browse-screen{display:block;overflow-y:auto;padding-bottom:2rem}
+  .browse-screen .hero{height:auto;min-height:30rem;padding:2rem var(--edge)}
+  .browse-screen .hero-copy,.browse-screen .trailer-youtube .hero-copy{width:100%;max-width:38rem}
+  .browse-catalogs{overflow:visible}
+  .hero.trailer-youtube{display:flex;flex-direction:column;align-items:stretch}
+  .trailer-youtube .hero-preview{position:relative;inset:auto;width:100%;order:2;margin-top:1rem}
+  .trailer-youtube .hero-preview .trailer-media{height:50vw;min-height:200px}
+  .trailer-view{width:100%}.trailer-view .trailer-media{height:48vh}
+  .search-screen:not(.is-editing) .search-editor{display:block}
+  .search-screen:not(.is-editing) .search-edit{display:none}
+}
