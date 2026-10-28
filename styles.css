@@ -173,3 +173,20 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 
 .card-title,.card-sub{transition:opacity 200ms ease,transform 220ms var(--motion-ease)}
 .card-slot.is-trailer-playing .card-title,.card-slot.is-trailer-playing .card-sub{opacity:0;transform:translateY(-.25rem);pointer-events:none}
+
+.shelf.is-lazy .rail{min-height:14.5rem}
+.search-results .shelf.is-lazy .rail{min-height:12rem}
+.category-setting{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0;border-bottom:1px solid #292c36}
+.category-setting>span{min-width:0;overflow-wrap:anywhere;font-size:.9rem}
+.category-setting-controls{display:flex;gap:.4rem;flex-shrink:0}
+.category-setting-controls button{padding:.5rem .7rem;min-height:2.4rem;font-size:.8rem}
+.category-setting-controls button:last-child{min-width:6rem}
+.settings-fields>.setting-inline:first-child{margin-top:0;padding-top:0;border:0}
+.feedback-actions button[aria-pressed=true]{background:#f5f5f7;color:#111}
+.skip-intro{position:absolute;right:var(--edge);bottom:12rem;z-index:5;background:#171a22e6;border:1px solid #b9bdca}
+.player.idle .skip-intro{bottom:3rem}
+.skip-intro[hidden],.next-episode-panel[hidden]{display:none}
+.next-episode-panel{position:absolute;right:var(--edge);bottom:3rem;z-index:6;width:29rem;max-width:90vw;padding:1.5rem;background:#11151ff5;border:1px solid #51596a;border-radius:.4rem}
+.next-episode-panel h3{margin:0;font-size:1.15rem}
+.next-episode-panel .actions{margin-top:1rem}
+@media(max-width:850px){.category-setting{align-items:flex-start;flex-wrap:wrap}.category-setting-controls{margin-left:auto}.skip-intro{bottom:14rem}.player.idle .skip-intro{bottom:3rem}}

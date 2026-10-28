@@ -8,13 +8,14 @@
   function year(meta){var match=String(meta.releaseInfo||'').match(/(?:19|20)\d{2}/);return match?Number(match[0]):0;}
   function create(options){var metadata=Object.create(null),store=options.store;
     function enrich(meta){var m=C.cleanMeta(meta);if(!m)return;var keys=Object.keys(metadata);if(keys.length>=100&&!metadata[C.key(m)])delete metadata[keys[0]];metadata[C.key(m)]=m;}
-    function build(rows,watched,type){
+    function build(rows,watched,type,opinions){opinions=opinions||{};
       var pool=[],byKey=Object.create(null),seen=Object.create(null),profile=Object.create(null),types=Object.create(null),frequency=Object.create(null),currentYear=new Date().getFullYear();
       rows.forEach(function(row){(row.items||[]).forEach(function(raw){var m=metadata[C.key(raw)]||raw;if(!m||m._sample||['movie','series'].indexOf(m.type)<0)return;var key=C.key(m),old=byKey[key];if(old){if(!old.genres.length&&m.genres.length)old.genres=m.genres.slice();if(!old.background&&m.background)old.background=m.background;return;}if(pool.length>=1800)return;m=C.cleanMeta(m);byKey[key]=m;pool.push(m);});});
       var seeds=[];(watched||[]).slice().sort(function(a,b){return (Number(b.at)||0)-(Number(a.at)||0);}).forEach(function(entry){if(!entry.meta||entry.meta._sample||entry.meta.id==='custom-direct')return;var key=C.key(entry.meta);if(seen[key])return;seen[key]=true;var m=metadata[key]||byKey[key]||entry.meta;seeds.push({meta:m,at:entry.at});});seeds=seeds.slice(0,30);
       seeds.forEach(function(seed,i){var weight=1/(1+i*.2);genres(seed.meta).forEach(function(k){profile[k]=(profile[k]||0)+weight;});types[seed.meta.type]=(types[seed.meta.type]||0)+weight;});
+      Object.keys(opinions).forEach(function(key){var vote=opinions[key];if(!vote||vote.value!==1||!vote.meta)return;var meta=metadata[key]||byKey[key]||vote.meta;genres(meta).forEach(function(k){profile[k]=(profile[k]||0)+1.8;});types[meta.type]=(types[meta.type]||0)+.8;});
       pool.forEach(function(m){genres(m).forEach(function(k){frequency[k]=(frequency[k]||0)+1;});});
-      function eligible(m){return (!type||m.type===type)&&year(m)<=currentYear;}
+      function eligible(m){return (!type||m.type===type)&&year(m)<=currentYear&&!(opinions[C.key(m)]&&opinions[C.key(m)].value===-1);}
       function score(m){var value=0;genres(m).forEach(function(k){value+=(profile[k]||0)*8/Math.sqrt(frequency[k]||1);});return value+(types[m.type]||0)*.15+(parseFloat(m.imdbRating)||0)*.07;}
       var available=pool.filter(eligible),unwatched=available.filter(function(m){return !seen[C.key(m)];}),recommended=unwatched.slice().sort(function(a,b){return score(b)-score(a);});
       var popular=[];rows.filter(function(row){return !row._discoveryGenre&&/^(top|popular|trending)$/i.test(row.catalog&&row.catalog.id||'');}).forEach(function(row){popular=popular.concat(row.items||[]);});popular=C.uniqueMetas(popular).filter(eligible);if(!popular.length)popular=available.slice();
