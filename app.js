@@ -177,7 +177,8 @@
   }
   function resetHeroPreview(hero){if(!hero)return;hero.classList.remove('has-trailer','trailer-youtube','trailer-video');var panel=hero.querySelector('.hero-preview'),controls=hero.querySelector('.hero-trailer-controls');panel.hidden=true;if(controls)controls.hidden=true;}
   function stopHeroTrailer(){trailerScheduler.stop();heroTrailer=null;heroTrailerKey='';heroTrailerBlocked=false;var hero=document.getElementById('hero');if(hero){resetHeroPreview(hero);hero.querySelector('.hero-preview').textContent='';var controls=hero.querySelector('.hero-trailer-controls');if(controls)controls.textContent='';}}
-  function trailerAllowed(meta){if(!config.autoTrailers||document.hidden||state.layers.length||state.player||!state.ready||meta._sample||!state.hero||C.key(meta)!==C.key(state.hero))return false;
+  function heroInView(){var hero=document.getElementById('hero');return !!hero&&T.visibleEnough(hero.getBoundingClientRect(),window.innerWidth,window.innerHeight);}
+  function trailerAllowed(meta){if(!heroInView()||!config.autoTrailers||document.hidden||state.layers.length||state.player||!state.ready||meta._sample||!state.hero||C.key(meta)!==C.key(state.hero))return false;
     var active=document.activeElement,hero=document.getElementById('hero');if(!hero||!hero.getClientRects().length)return false;if(window.innerWidth<900&&active&&active.closest('.card'))return false;return !!(active&&(active.closest('.card')||hero.contains(active)));
   }
   function queueHeroTrailer(meta){if(!trailerAllowed(meta)||heroTrailerDismissed===C.key(meta)||heroTrailerKey===C.key(meta))return;heroTrailerDismissed='';heroTrailerKey=C.key(meta);trailerScheduler.select(meta);}
@@ -210,14 +211,14 @@
   function setPage(page){clearTimeout(heroTimer);state.searchGeneration++;state.page=page;var main=document.getElementById('main');if(main)main.scrollTop=0;render();focus(app.querySelector('[data-focus="nav-'+page+'"]'));}
   function render(){
     stopHeroTrailer();clearTimeout(heroTimer);
-    var old=document.activeElement&&document.activeElement.dataset.focus,oldScreen=document.getElementById('main'),oldScroll=oldScreen&&(oldScreen.querySelector('.browse-catalogs')||oldScreen),scrollTop=oldScroll?oldScroll.scrollTop:0,rails={};
+    var old=document.activeElement&&document.activeElement.dataset.focus,oldScreen=document.getElementById('main'),scrollTop=oldScreen?oldScreen.scrollTop:0,rails={};
     app.querySelectorAll('[data-rail]').forEach(function(r){rails[r.dataset.rail]=r.scrollLeft;});
     app.textContent='';append(app,renderNav());var screen=el('main','screen');screen.id='main';append(app,screen);
     if(state.page==='settings')renderSettings(screen);
     else if(state.page==='search')renderSearch(screen);
     else if(state.page==='saved')renderSaved(screen);
     else renderHome(screen);
-    (screen.querySelector('.browse-catalogs')||screen).scrollTop=scrollTop;app.querySelectorAll('[data-rail]').forEach(function(r){r.scrollLeft=rails[r.dataset.rail]||0;});
+    screen.scrollTop=scrollTop;app.querySelectorAll('[data-rail]').forEach(function(r){r.scrollLeft=rails[r.dataset.rail]||0;});
     if(!state.layers.length){var restore=old&&app.querySelector('[data-focus="'+old+'"]');if(restore)focus(restore);else initialFocus(app);}
   }
   function renderHome(screen){
@@ -335,7 +336,7 @@
     append(wrap,button('Gotovo',function(){input.value=area.value;input.dispatchEvent(new Event('change',{bubbles:true}));popLayer();},'primary'));append(l.body,wrap);focus(wrap.querySelector('button'));
   }
   function renderSettings(screen){
-    var content=el('div','page-content');append(content,el('h1','','Tvoj TV. Tvoji izvori.'),el('p','muted','LUMA 0.4.1 · zasebna aplikacija za Stremio dodatke'));var grid=el('div','settings-grid'),left=el('div'),right=el('div');
+    var content=el('div','page-content');append(content,el('h1','','Tvoj TV. Tvoji izvori.'),el('p','muted','LUMA 0.4.2 · zasebna aplikacija za Stremio dodatke'));var grid=el('div','settings-grid'),left=el('div'),right=el('div');
     var auth=account.status(),accountSection=el('section','settings-section account-section');append(accountSection,el('h2','','Stremio račun'));
     if(auth.connected){var syncStatus=el('p','note',syncLabel());syncStatus.id='account-sync-status';syncStatus.setAttribute('role','status');append(accountSection,el('p','account-email',auth.user.email),syncStatus,button('Sinkroniziraj sada',syncAccount,'primary','account-sync'),button('Odjavi ovaj TV',function(){
       var l=pushLayer('account-logout','Odjava iz LUME');append(l.body,el('p','',account.status().pending?'Neke promjene još čekaju sinkronizaciju. Prvo ih pošalji ili odjavi TV i odbaci te neposlane promjene.':'Odjavit će se samo LUMA na ovom uređaju. Tvoj Stremio račun i druge aplikacije ostaju prijavljeni.'));
@@ -467,8 +468,8 @@
     if((code===13||code===32)&&!editing){e.preventDefault();var focused=document.activeElement;if(focused&&focused.tagName==='BUTTON')focused.click();}
   },true);
   document.addEventListener('focusin',function(e){if(e.target.closest('.card')||e.target.closest('.hero-preview'))return;var hero=document.getElementById('hero');if(hero&&hero.contains(e.target)&&state.hero)queueHeroTrailer(state.hero);else stopHeroTrailer();});
-  document.addEventListener('scroll',function(){if(heroTrailer&&!heroTrailerVisible())stopHeroTrailer();},true);
-  window.addEventListener('resize',function(){if(heroTrailer&&!heroTrailerVisible())stopHeroTrailer();});
+  document.addEventListener('scroll',function(){if(heroTrailerKey&&!heroInView()||heroTrailer&&!heroTrailerVisible())stopHeroTrailer();},true);
+  window.addEventListener('resize',function(){if(heroTrailerKey&&!heroInView()||heroTrailer&&!heroTrailerVisible())stopHeroTrailer();});
   document.addEventListener('visibilitychange',function(){if(document.hidden){stopHeroTrailer();var layer=state.layers[state.layers.length-1],trailer=layer&&layer.trailer&&layer.trailer();if(trailer)trailer.pause();}if(document.hidden&&state.player)state.player.video.pause();else if(!document.hidden&&account.status().connected&&!state.player)syncAccount();});
   window.addEventListener('offline',function(){toast('Mrežna veza je prekinuta. Provjeri vezu televizora.');});
   window.addEventListener('online',function(){toast('Mrežna veza je ponovno dostupna.');if(account.status().connected)syncAccount();});

@@ -52,13 +52,12 @@ button{transition:transform 140ms ease-out,background-color 140ms ease-out,color
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.card:focus{transform:none}}
 
 /* One cinematic stage belongs to the catalog. It never floats over a card. */
-.browse-screen{display:flex;flex-direction:column;padding:5.1rem 0 0;overflow:hidden;scroll-padding:0}
-.browse-screen .hero{flex:0 0 55vh;height:55vh;min-height:0;padding:1.4rem var(--edge);background:#0b0c10}
+.browse-screen{display:block;padding:5.1rem 0 4rem;overflow-y:auto;overflow-x:hidden;scroll-padding-top:6rem}
+.browse-screen .hero{height:55vh;min-height:0;padding:1.4rem var(--edge);background:#0b0c10}
 .browse-screen .hero-copy{width:43%;max-width:37rem}
 .browse-screen .hero-copy h1{font-size:2.8rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .browse-screen .hero-description{-webkit-line-clamp:2}
-.browse-catalogs{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;scroll-padding:1rem 0;padding:1.1rem 0 2rem;margin:0}
-.browse-catalogs::-webkit-scrollbar{display:none}
+.browse-catalogs{overflow:visible;padding:1.1rem 0 2rem;margin:0}
 .browse-screen .shelf{margin-bottom:1.2rem}
 .browse-screen .page-content{padding:1rem var(--edge) 2rem}
 .saved-catalogs>h1{font-size:1.4rem;margin-bottom:.5rem}
