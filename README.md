@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.4**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.5**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -119,3 +119,7 @@ Pregled je lokalni i vezan uz točan račun i konfiguraciju dodataka. Odjava ili
 Uklonjeni su dvostruko početno iscrtavanje, ponovljeno čitanje biblioteke i nepotrebna kopija biblioteke pri početku sinkronizacije. Početni katalozi imaju prednost pred ostalim zahtjevima; postojeći zadani katalog i zadnji spremljeni početni izvori obrađuju se ranije. Svi korisnikovi dodaci i dalje ostaju dostupni. Prvi pristigli katalog više nema obveznu dodatnu stanku od 80 ms.
 
 Dijagnostika odvaja Prvi katalog od Svježi katalog: prvi može biti spremljeni prikaz, drugi pokazuje vrijeme dolaska odgovora za obnovu. U izoliranom TV prikazu na laptopu, uz namjerno kašnjenje filmskog kataloga od 2,5 s, prethodna verzija je prvi katalog zabilježila nakon 2634 ms, nova bez predmemorije nakon 2599 ms, a novo ponovno otvaranje nakon 58 ms uz svježi odgovor nakon 2565 ms. To su pojedinačna kontrolirana mjerenja, bez tvrdnje o jednakim vremenima na fizičkom TV-u. Provjereno je očuvanje fokusa dok pozadinska obnova vraća izmijenjene naslove. Svih 171 testova prolazi, uključujući istek, promjenu računa/dodataka, privatnost, prijavu samo za sesiju, oštećene podatke i nedostatak prostora.
+
+## Veći tekst fokusirane kartice · 0.7.5
+
+Naziv fokusiranog filma ili serije povećan je s 0,91 na 1,2 rem, a godina/prateći tekst s 0,75 na 0,95 rem. Promjenom fokusa prethodna kartica vraća običnu veličinu. Postojeće lagane animacije i skrivanje teksta tijekom trailera ostaju. Provjereno u pregledniku pri prelasku fokusa između kartica.
