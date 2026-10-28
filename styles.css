@@ -212,3 +212,22 @@ input:focus,textarea:focus{border-color:#d7dbe6;background-color:#20242f}
 .subtitle-timing{grid-column:1/-1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding-top:.8rem;margin-top:.4rem;border-top:1px solid #454b58}
 .subtitle-timing span{flex-basis:100%;margin-bottom:.2rem;font-size:.85rem;color:#c4c7d0}
 .subtitle-timing button{flex:1;white-space:nowrap;text-align:center;font-size:.8rem}
+/* Short TV motion touches one focused surface, never the whole carousel. */
+@keyframes luma-tv-enter{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes luma-tv-card{from{opacity:.88;transform:scale(.985)}to{opacity:1;transform:none}}
+@keyframes luma-tv-fade{from{opacity:0}to{opacity:1}}
+.tv-lite .page-content>h1,.tv-lite .layer-top,.tv-lite .detail-content,.tv-lite .hero-copy{animation:luma-tv-enter 160ms ease-out}
+.tv-lite button,.tv-lite input,.tv-lite textarea{transition:transform 120ms ease-out,opacity 120ms ease,background-color 120ms ease}
+.tv-lite button:not(.card):focus{transform:translateY(-1px)}
+.tv-lite button:not(.card):active{transform:scale(.985)}
+.tv-lite .stream:focus,.tv-lite .episode:focus{transform:translateX(2px)}
+.tv-lite .card-slot.is-focused .card-art{animation:luma-tv-card 150ms ease-out}
+.tv-lite .card-preview{animation:luma-tv-fade 150ms ease-out}
+.tv-lite .nav button:after{transition:opacity 120ms ease,transform 150ms ease-out}
+.tv-lite .player-subtitles:not([hidden]){animation:luma-tv-enter 130ms ease-out!important}
+.tv-lite .card-title,.tv-lite .card-sub,.tv-lite .motion-image{transition:opacity 160ms ease}
+@media(prefers-reduced-motion:reduce){.tv-lite *{animation:none!important;transition:none!important}.tv-lite button:not(.card):focus,.tv-lite button:not(.card):active,.tv-lite .stream:focus,.tv-lite .episode:focus{transform:none}}
+
+.hero-copy{transition:opacity 160ms ease,transform 160ms ease}
+.hero-copy.hero-copy-out{opacity:0;transform:translateY(-4px);pointer-events:none;animation:none!important}
+@media(prefers-reduced-motion:reduce){.hero-copy{transition:none!important}}

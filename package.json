@@ -1,12 +1,12 @@
 {
   "name": "luma-tv",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "Independent TV frontend for the Stremio HTTP addon ecosystem",
   "scripts": {
     "start": "node tools/serve.mjs",
     "test": "node --test tests/*.test.cjs",
-    "check": "node --check network.js && node --check search.js && node --check playback.js && node --check core.js && node --check stremio.js && node --check subtitles.js && node --check trailers.js && node --check recommendations.js && node --check motion.js && node --check experience.js && node --check segments.js && node --check app.js && node --test tests/*.test.cjs"
+    "check": "node --check runtime.js && node --check metrics.js && node --check sources.js && node --check network.js && node --check search.js && node --check playback.js && node --check core.js && node --check stremio.js && node --check subtitles.js && node --check trailers.js && node --check recommendations.js && node --check motion.js && node --check experience.js && node --check segments.js && node --check app.js && node --test tests/*.test.cjs"
   },
   "engines": {
     "node": ">=20"

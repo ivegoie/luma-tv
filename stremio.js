@@ -1,9 +1,11 @@
 /* Stremio account protocol: fixed official endpoints; no password collection. */
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('./core.js'),require('./vendor/pako-2.1.0.min.js'));
-  else root.LumaStremio=factory(root.LumaCore,root.pako);
-}(typeof self!=='undefined'?self:this,function(C,pako){
+  else root.LumaStremio=factory(root.LumaCore,root.pako,function(){return root.LumaRuntime.load('compression');});
+}(typeof self!=='undefined'?self:this,function(C,pako,loadCodec){
   'use strict';
+  var codecPromise=null;
+  function ready(){if(pako)return Promise.resolve();if(codecPromise)return codecPromise;if(!loadCodec)return Promise.reject(new Error('Stremio zapis epizoda nije dostupan.'));codecPromise=loadCodec().then(function(codec){pako=codec;},function(error){codecPromise=null;throw error;});return codecPromise;}
   var API='https://api.strem.io/api/',LINK='https://link.stremio.com/api/v2/';
   function copy(x){return JSON.parse(JSON.stringify(x));}
   function stamp(x){var n=typeof x==='number'?x:Date.parse(x||'');return isFinite(n)?n:0;}
@@ -84,6 +86,7 @@
     function time(){lastTime=Math.max(clock(),lastTime+1);return lastTime;}
     function persist(){if(session&&session.remember){store.write('stremio-session',session);store.write('stremio-cache',data);}}
     function status(){var list=addonList(data.addons);return {connected:!!session,user:session?copy(session.user):null,syncing:!!syncing,pending:Object.keys(data.pending).length,lastSync:data.lastSync||0,error:error,addonCount:data.addons.length,unsupported:list.unsupported};}
+    function afterCodec(work){var version=epoch;return ready().then(function(){if(version!==epoch)throw err('Račun je promijenjen.');return work();});}
     function emit(kind){notify(kind,status());}
     function ticket(){if(!session)throw err('Prijavi se u Stremio.');return {epoch:epoch,key:session.authKey};}
     function assert(t){if(t.epoch!==epoch||!session||t.key!==session.authKey)throw err('Prijava se promijenila.');}
@@ -101,10 +104,10 @@
           changes.forEach(function(item){data.items[item._id]=item;if(JSON.stringify(data.pending[item._id])===JSON.stringify(edits[item._id]))delete data.pending[item._id];});persist();});
       });}(ids.slice(start,start+100)));return chain;
     }
-    function flush(){if(!session)return Promise.resolve();if(flushing)return flushing;var t=ticket();
+    function flush(){if(!session)return Promise.resolve();if(!pako)return afterCodec(flush);if(flushing)return flushing;var t=ticket();
       flushing=queue(function(){return flushInside(t);}).then(function(){if(t.epoch===epoch){error='';emit('saved');}},function(e){if(t.epoch===epoch){error=e.message;emit('error');}throw e;}).then(function(){if(t.epoch===epoch)flushing=null;},function(e){if(t.epoch===epoch)flushing=null;throw e;});return flushing;
     }
-    function sync(){if(!session)return Promise.resolve();if(syncing)return syncing;var t=ticket();
+    function sync(){if(!session)return Promise.resolve();if(!pako)return afterCodec(sync);if(syncing)return syncing;var t=ticket();
       syncing=queue(function(){return flushInside(t).then(function(){return Promise.all([post('addonCollectionGet',{type:'AddonCollectionGet',update:true},t),post('datastoreMeta',{collection:'libraryItem'},t)]);}).then(function(res){
         var addons=res[0],meta=res[1];if(!addons||!Array.isArray(addons.addons)||!Array.isArray(meta))throw err('Sinkronizacija nije vratila potpun odgovor.');
         data.addons=addons.addons;var present=Object.create(null),ids=[];
@@ -115,6 +118,7 @@
     }
     function connect(authKey,remember,stillValid){
       if(typeof authKey!=='string'||!authKey||authKey.length>4096)return Promise.reject(err('Stremio nije vratio valjanu prijavu.'));
+      if(!pako)return afterCodec(function(){if(stillValid&&!stillValid())throw err('Prijava je otkazana.');return connect(authKey,remember,stillValid);});
       var start=epoch;return send('POST',API+'getUser',{type:'GetUser',authKey:authKey}).then(result).then(function(user){
         if(start!==epoch||stillValid&&!stillValid())throw err('Prijava je otkazana.');if(!user||typeof user._id!=='string')throw err('Stremio nije potvrdio račun.');
         epoch++;session={authKey:authKey,user:{id:user._id,email:String(user.email||'Stremio račun')},remember:remember!==false};
@@ -150,5 +154,5 @@
       });}
     return {status:status,connect:connect,disconnect:disconnect,sync:sync,flush:flush,views:getViews,watched:watched,item:getItem,addons:function(){return addonList(data.addons);},descriptors:function(){return copy(data.addons);},setBookmark:setBookmark,recordProgress:recordProgress,changeAddon:changeAddon,createLink:createLink,readLink:readLink};
   }
-  return {createClient:createClient,mergeItem:mergeItem,views:views,addonList:addonList,unpackWatched:unpackWatched,packWatched:packWatched,episodeIds:episodeIds};
+  return {ready:ready,codecReady:function(){return !!pako;},createClient:createClient,mergeItem:mergeItem,views:views,addonList:addonList,unpackWatched:unpackWatched,packWatched:packWatched,episodeIds:episodeIds};
 }));

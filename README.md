@@ -30,7 +30,7 @@ Prijava i sinkronizacija idu izravno prema Stremiju. Repozitorij ne sadrži kori
 
 ## Održavanje
 
-Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.2**.
+Datoteke u korijenu su objavljena aplikacija; GitHub Pages objavljuje granu `main`. Nema koraka izgradnje ni aplikacijskog backend poslužitelja. Verzija: **0.7.3**.
 
 LUMA je neovisni projekt; nije službena aplikacija Stremija, VIDAA-e, Hisensea ili Netflixa. Licence uključenih biblioteka hls.js i pako nalaze se u `vendor/`. Probni video i kalibracijska slika uključeni su za provjeru playera.
 
@@ -97,3 +97,15 @@ Prvi dostupan katalog prikazuje se bez čekanja svih dodataka. Dodatni redovi, �
 HLS biblioteka učitava se tek kad je potrebna. Na slabijoj vezi HLS.js počinje najnižom varijantom, ograničava automatski odabir na 1080p i koristi ograničen međuspremnik. Izvorni TV HLS player upravlja vlastitim varijantama. Za obični MP4 nema pretvorbe kvalitete tijekom reprodukcije: dostupne manje verzije mora dati dodatak, a nepoznata rezolucija izvora ne može se pouzdano ograničiti. Veza i brzina izvora i dalje određuju zastajkivanje.
 
 Provjera: 139 testova i izolirani preglednik bez stvarnog računa. U simulaciji s 10 kataloga na početku su zatražena 2; odgođeni redovi dohvaćeni su pri navigaciji. HLS biblioteka nije preuzeta pri pregledavanju ni pri MP4 reprodukciji. Na jednom izmjerenom Cinemeta/Metahub kadru mala slika ima 28.355 B prema 446.608 B srednje slike. To nije mjerenje svih slika ni fizičkog TV-a.
+
+## Brži izvori i blage TV animacije · 0.7.3
+
+Izvori se prikazuju čim pojedini dodatak odgovori. Automatski izbor čeka najviše 3 sekunde nakon prvog kandidata koji zadovoljava postavljenu kvalitetu, jezik i prijavljenu kompatibilnost; ako su svi dodaci već odgovorili, bira odmah. Dodaci čiji se manifest otkrije dok je izbornik otvoren uključuju se u isti postupak. Kasniji odgovori dopunjuju ručni izbor i kandidate za oporavak, a ne prekidaju video koji se već reproducira. Zatvaranje izbornika i ručni izbor otkazuju automatsko pokretanje. Veliki popisi prikazuju 24 izvora po skupini, uz Još izvora. Nepoznati kodeci i jezici nisu potvrda kompatibilnosti; ostali izvori i torrent dodaci ostaju dostupni ručno prema postojećim postavkama.
+
+Početne skripte izvršavaju se odgođeno i redom. Pako se dohvaća tek za rad s računom/odgledanim epizodama; mrežni upisi čekaju njegovu dostupnost i ponovno provjeravaju aktivni račun. GSAP se na TV-u ne preuzima. Na standardnoj desktop vezi može se dohvatiti u slobodnom vremenu nakon prvog kataloga, osim uz smanjeno kretanje. Statičke početne JS datoteke imaju oko 220 KB prema 329 KB u 0.7.2 (nekomprimirane datoteke; stvarni prijenos ovisi o predmemoriji, računu i načinu rada).
+
+TV dobiva kratke prijelaze fokusa, kartice, slike, naslova i izbornika od približno 120–160 ms, samo preko prozirnosti i transformacije. Proširenje kartice ne animira dimenzije cijelog reda. Smanjeno kretanje se poštuje. Automatski traileri i dalje kreću nakon 2 sekunde sa zvukom.
+
+Postavke → Dijagnostika prikazuju lokalna vremena prvog kataloga, prvog kompatibilnog izvora, odabira i pokretanja videa. Odziv tipki mjeri se od vremenske oznake događaja do sljedećeg kadra i čuva najviše 60 uzoraka, bez neprekidne petlje mjerenja. To ne mjeri ukupnu latenciju fizičkog daljinskog ili zaslona. Memorija JavaScripta prikazuje se samo ako je preglednik prijavljuje; nije ukupni RAM televizora. Podaci se ne šalju niti trajno spremaju. Osvježi mjerenja ponovno očitava trenutačno stanje.
+
+Provjera: 159 testova i izolirani preglednik s uključenim TV načinom. U scenariju s tri dodatka odabran je 1080p izvor nakon približno 3,1 s, prije odgovora sporog dodatka nakon 8 s; kasni bolji izvor nije promijenio video. Provjereni su postupni ručni izbor, nepomicanje fokusa pri dopuni, CSS prijelaz kartice od 150 ms i izostanak Pako/GSAP/HLS preuzimanja pri gostujućem pregledu i izravnom MP4-u. To je simulacija na laptopu; stvarna mjerenja fizičkog Hisensea i dugotrajnog rada još nisu prikupljena.
